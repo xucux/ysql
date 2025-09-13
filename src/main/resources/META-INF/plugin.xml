@@ -1,0 +1,116 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.github.xucux.ysql</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>YSql</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="oxu_uxo@foxmail.com" url="https://xucux.github.io/">xucux</vendor>
+
+    <idea-version since-build="231"/>
+    <version>1.0.0</version>
+    <change-notes>
+        <![CDATA[
+           1.0.0
+           - Initial release
+        ]]>
+    </change-notes>
+
+    <category>SQL</category>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[
+    <h3>YSql - SQL Sharding Parser and StringBuffer Code Generator Plugin</h3>
+    <p>This is a simple IntelliJ IDEA plugin that provides two core features:</p>
+    <ul>
+        <li><strong>SQL Sharding Parser</strong>: Automatically parses a single SQL statement and generates multiple sharded SQL statements, supporting different sharding strategies and naming rules</li>
+        <li><strong>StringBuffer Assembly</strong>: Automatically converts SQL statements to Java/C#/Kotlin code using StringBuffer/StringBuilder assembly</li>
+    </ul>
+    <h4>Key Features:</h4>
+    <ul>
+        <li>Intelligent table name recognition and extraction</li>
+        <li>Multiple sharding suffix generation strategies (numeric sequence, year, year-month, etc.)</li>
+        <li>StringBuffer code generation support for multiple programming languages</li>
+        <li>User-friendly interface and configuration options</li>
+        <li>One-click copy and export functionality</li>
+    </ul>
+    <p>Email: xucux@foxmail.com</p>
+    <p><em>Make SQL sharding development and code generation more efficient!</em></p>
+
+    <hr>
+
+    <h3>YSql - SQL分表解析和StringBuffer代码生成插件</h3>
+    <p>这是一个简单的IntelliJ IDEA插件，提供两个核心功能：</p>
+    <ul>
+        <li><strong>分表SQL解析</strong>：将单个SQL语句自动解析并生成多个分表SQL语句，支持不同的分表策略和命名规则</li>
+        <li><strong>StringBuffer装配</strong>：将SQL语句自动转换为使用StringBuffer/StringBuilder装配的Java/C#/Kotlin代码</li>
+    </ul>
+    <h4>主要特性：</h4>
+    <ul>
+        <li>智能表名识别和提取</li>
+        <li>多种分表后缀生成策略（数字序列、年份、年月等）</li>
+        <li>支持多种编程语言的StringBuffer代码生成</li>
+        <li>友好的用户界面和配置选项</li>
+        <li>一键复制和导出功能</li>
+    </ul>
+    <p>留言邮箱：xucux@foxmail.com</p>
+    <p><em>让SQL分表开发和代码生成变得更加高效！</em></p>
+  ]]></description>
+
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- 注册服务 -->
+<!--        <applicationService serviceImplementation="com.github.xucux.ysql.config.EncodingConfig"/>-->
+        
+        <!-- 注册启动监听器 -->
+        <postStartupActivity implementation="com.github.xucux.ysql.listeners.EncodingStartupListener"/>
+        
+        <!-- 注册ToolWindow -->
+        <toolWindow id="YSql"
+                    secondary="true"
+                    anchor="right"
+                    factoryClass="com.github.xucux.ysql.ui.YsqlToolWindowFactory"/>
+
+    </extensions>
+
+    <!-- Actions -->
+    <actions>
+        <!-- 分表SQL解析Action -->
+        <action id="SqlSharding.GenerateShardingSql" 
+                class="com.github.xucux.ysql.actions.ShardingSqlAction"
+                text="生成分表SQL"
+                description="从单个SQL语句生成多个分表SQL语句">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift S"/>
+        </action>
+        
+        <!-- StringBuffer代码生成Action -->
+        <action id="StringBuffer.GenerateCode" 
+                class="com.github.xucux.ysql.actions.StringBufferAction"
+                text="生成StringBuffer代码"
+                description="将SQL转换为StringBuffer/StringBuilder代码">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift B"/>
+        </action>
+        
+        <!-- 打开Ysql工具窗口Action -->
+        <action id="Ysql.OpenToolWindow" 
+                class="com.github.xucux.ysql.actions.OpenYsqlToolWindowAction"
+                text="打开YSql工具窗口"
+                description="打开YSql插件的工具窗口，包含分表SQL解析和StringBuffer代码生成功能">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift Y"/>
+        </action>
+    </actions>
+</idea-plugin>

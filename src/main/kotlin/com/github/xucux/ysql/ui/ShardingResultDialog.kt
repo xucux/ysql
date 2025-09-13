@@ -1,0 +1,135 @@
+package com.github.xucux.ysql.ui
+
+import com.github.xucux.ysql.models.ShardingResult
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextArea
+import com.intellij.util.ui.FormBuilder
+import java.awt.BorderLayout
+import java.awt.Dimension
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
+import javax.swing.*
+
+/**
+ * 分表SQL结果展示对话框
+ * 显示生成的分表SQL结果
+ */
+class ShardingResultDialog(
+    private val project: Project,
+    private val result: ShardingResult
+) : DialogWrapper(project) {
+    
+    private val resultTextArea = JBTextArea(20, 80)
+    private val statisticsTextArea = JBTextArea(8, 80)
+    
+    init {
+        title = "分表SQL生成结果"
+        init()
+        
+        // 设置结果文本区域
+        resultTextArea.text = result.getCombinedSqls()
+        resultTextArea.isEditable = false
+        resultTextArea.lineWrap = true
+        resultTextArea.wrapStyleWord = true
+        
+        // 设置统计信息文本区域
+        statisticsTextArea.text = result.getStatistics()
+        statisticsTextArea.isEditable = false
+        statisticsTextArea.lineWrap = true
+        statisticsTextArea.wrapStyleWord = true
+        
+        // 设置字体
+        resultTextArea.font = java.awt.Font("Consolas", java.awt.Font.PLAIN, 12)
+        statisticsTextArea.font = java.awt.Font("Dialog", java.awt.Font.PLAIN, 11)
+    }
+    
+    override fun createCenterPanel(): JComponent {
+        val mainPanel = JPanel(BorderLayout())
+        
+        // 创建标签页
+        val tabbedPane = JTabbedPane()
+        
+        // 结果标签页
+        val resultPanel = JPanel(BorderLayout())
+        resultPanel.add(JBScrollPane(resultTextArea), BorderLayout.CENTER)
+        tabbedPane.addTab("分表SQL结果", resultPanel)
+        
+        // 统计信息标签页
+        val statisticsPanel = JPanel(BorderLayout())
+        statisticsPanel.add(JBScrollPane(statisticsTextArea), BorderLayout.CENTER)
+        tabbedPane.addTab("统计信息", statisticsPanel)
+        
+        mainPanel.add(tabbedPane, BorderLayout.CENTER)
+        
+        // 设置面板大小
+        mainPanel.preferredSize = Dimension(800, 600)
+        
+        return mainPanel
+    }
+    
+    override fun createActions(): Array<Action> {
+        val copyAction = object : AbstractAction("复制结果") {
+            override fun actionPerformed(e: java.awt.event.ActionEvent?) {
+                copyToClipboard()
+            }
+        }
+        
+        val exportAction = object : AbstractAction("导出到文件") {
+            override fun actionPerformed(e: java.awt.event.ActionEvent?) {
+                exportToFile()
+            }
+        }
+        
+        return arrayOf(copyAction, exportAction, cancelAction)
+    }
+    
+    private fun copyToClipboard() {
+        val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+        val selection = StringSelection(result.getCombinedSqls())
+        clipboard.setContents(selection, null)
+        
+        JOptionPane.showMessageDialog(
+            this.contentPanel,
+            "分表SQL已复制到剪贴板",
+            "复制成功",
+            JOptionPane.INFORMATION_MESSAGE
+        )
+    }
+    
+    private fun exportToFile() {
+        val fileChooser = JFileChooser()
+        fileChooser.selectedFile = java.io.File("sharding_sql_${System.currentTimeMillis()}.sql")
+        fileChooser.fileFilter = object : javax.swing.filechooser.FileFilter() {
+            override fun accept(f: java.io.File): Boolean {
+                return f.isDirectory || f.name.lowercase().endsWith(".sql")
+            }
+            
+            override fun getDescription(): String {
+                return "SQL文件 (*.sql)"
+            }
+        }
+        
+        if (fileChooser.showSaveDialog(this.contentPanel) == JFileChooser.APPROVE_OPTION) {
+            try {
+                val file = fileChooser.selectedFile
+                file.writeText(result.getCombinedSqls())
+                
+                JOptionPane.showMessageDialog(
+                    this.contentPanel,
+                    "分表SQL已导出到：${file.absolutePath}",
+                    "导出成功",
+                    JOptionPane.INFORMATION_MESSAGE
+                )
+            } catch (e: Exception) {
+                JOptionPane.showMessageDialog(
+                    this.contentPanel,
+                    "导出失败：${e.message}",
+                    "导出错误",
+                    JOptionPane.ERROR_MESSAGE
+                )
+            }
+        }
+    }
+}
