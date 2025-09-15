@@ -55,7 +55,7 @@ object EncodingValidator {
     fun getEncodingTestReport(): String {
         return buildString {
             appendLine("UTF-8编码测试报告")
-//            appendLine("=" * 30)
+            appendLine("=".repeat(30))
             
             // 测试中文字符串编码
             val chineseTestResult = testChineseEncoding()

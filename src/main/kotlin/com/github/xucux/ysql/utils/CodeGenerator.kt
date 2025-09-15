@@ -58,28 +58,95 @@ object CodeGenerator {
         val commentSymbol = config.language.getCommentSymbol()
         val escapeMethod = config.language.getStringEscapeMethod()
         
+        // 添加注释（如果启用）
+        if (config.addComments) {
+            result.appendLine("$commentSymbol 使用${config.language.bufferClass}构建SQL语句")
+            result.appendLine("$commentSymbol 变量名: ${config.variableName}")
+            result.appendLine("$commentSymbol 原始SQL: ${config.originalSql.replace("\n", " ").trim()}")
+            result.appendLine()
+        }
         
-        // 生成变量声明
-        result.appendLine("${config.language.bufferClass} ${config.variableName} = new ${config.language.bufferClass}();")
-        result.appendLine()
+        // 根据语言生成不同的变量声明
+        when (config.language) {
+            CodeLanguage.JAVA -> {
+                result.appendLine("${config.language.bufferClass} ${config.variableName} = new ${config.language.bufferClass}();")
+            }
+            CodeLanguage.CSHARP -> {
+                result.appendLine("${config.language.bufferClass} ${config.variableName} = new ${config.language.bufferClass}();")
+            }
+            CodeLanguage.KOTLIN -> {
+                result.appendLine("val ${config.variableName} = ${config.language.bufferClass}()")
+            }
+            CodeLanguage.SCALA -> {
+                result.appendLine("val ${config.variableName} = new ${config.language.bufferClass}()")
+            }
+            CodeLanguage.GROOVY -> {
+                result.appendLine("def ${config.variableName} = new ${config.language.bufferClass}()")
+            }
+        }
+        
+        // 添加空行（如果启用格式化）
+        if (config.formatCode) {
+            result.appendLine()
+        }
         
         // 生成append语句
         sqlLines.forEachIndexed { index, line ->
             val trimmedLine = line.trim()
             
             if (trimmedLine.isNotEmpty()) {
+                // 添加注释（如果启用）
+                if (config.addComments) {
+                    result.appendLine("$commentSymbol 添加SQL片段: $trimmedLine")
+                }
+                
                 // 转义字符串并添加空格
                 val escapedLine = escapeMethod(trimmedLine)
-                result.appendLine("${config.variableName}.append(\"$escapedLine \");")
+                when (config.language) {
+                    CodeLanguage.CSHARP -> {
+                        result.appendLine("${config.variableName}.Append(\"$escapedLine \");")
+                    }
+                    else -> {
+                        result.appendLine("${config.variableName}.append(\"$escapedLine \");")
+                    }
+                }
+                
+                // 添加空行（如果启用格式化且不是最后一行）
+                if (config.formatCode && index < sqlLines.size - 1) {
+                    result.appendLine()
+                }
             }
         }
         
-        result.appendLine()
+        // 添加空行（如果启用格式化）
+        if (config.formatCode) {
+            result.appendLine()
+        }
+        
+        // 添加注释（如果启用）
+        if (config.addComments) {
+            result.appendLine("$commentSymbol 生成最终的SQL字符串")
+        }
         
         // 生成最终字符串
         val finalVariableName = capitalize(config.variableName)
-        result.appendLine("String final$finalVariableName = ${config.variableName}.${config.language.toStringMethod};")
-        
+        when (config.language) {
+            CodeLanguage.JAVA -> {
+                result.appendLine("String final$finalVariableName = ${config.variableName}.${config.language.toStringMethod};")
+            }
+            CodeLanguage.CSHARP -> {
+                result.appendLine("string final$finalVariableName = ${config.variableName}.${config.language.toStringMethod};")
+            }
+            CodeLanguage.KOTLIN -> {
+                result.appendLine("val final$finalVariableName = ${config.variableName}.${config.language.toStringMethod}")
+            }
+            CodeLanguage.SCALA -> {
+                result.appendLine("val final$finalVariableName = ${config.variableName}.${config.language.toStringMethod}")
+            }
+            CodeLanguage.GROOVY -> {
+                result.appendLine("def final$finalVariableName = ${config.variableName}.${config.language.toStringMethod}")
+            }
+        }
         
         return result.toString()
     }

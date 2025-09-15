@@ -26,16 +26,20 @@
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description><![CDATA[
     <h3>YSql - SQL Sharding Parser and StringBuffer Code Generator Plugin</h3>
-    <p>This is a simple IntelliJ IDEA plugin that provides two core features:</p>
+    <p>This is a simple IntelliJ IDEA plugin that provides four core features:</p>
     <ul>
         <li><strong>SQL Sharding Parser</strong>: Automatically parses a single SQL statement and generates multiple sharded SQL statements, supporting different sharding strategies and naming rules</li>
         <li><strong>StringBuffer Assembly</strong>: Automatically converts SQL statements to Java/C#/Kotlin code using StringBuffer/StringBuilder assembly</li>
+        <li><strong>SQL Reverse Parser</strong>: Extracts SQL statements from existing StringBuffer/StringBuilder code, supporting multiple programming languages</li>
+        <li><strong>Batch Delete Procedure Generator</strong>: Generates batch delete stored procedures for historical data cleanup with pre-configured templates</li>
     </ul>
     <h4>Key Features:</h4>
     <ul>
         <li>Intelligent table name recognition and extraction</li>
         <li>Multiple sharding suffix generation strategies (numeric sequence, year, year-month, etc.)</li>
         <li>StringBuffer code generation support for multiple programming languages</li>
+        <li>SQL reverse parsing from StringBuffer/StringBuilder code</li>
+        <li>Pre-configured batch delete procedure templates for common scenarios</li>
         <li>User-friendly interface and configuration options</li>
         <li>One-click copy and export functionality</li>
     </ul>
@@ -45,16 +49,20 @@
     <hr>
 
     <h3>YSql - SQL分表解析和StringBuffer代码生成插件</h3>
-    <p>这是一个简单的IntelliJ IDEA插件，提供两个核心功能：</p>
+    <p>这是一个简单的IntelliJ IDEA插件，提供四个核心功能：</p>
     <ul>
         <li><strong>分表SQL解析</strong>：将单个SQL语句自动解析并生成多个分表SQL语句，支持不同的分表策略和命名规则</li>
         <li><strong>StringBuffer装配</strong>：将SQL语句自动转换为使用StringBuffer/StringBuilder装配的Java/C#/Kotlin代码</li>
+        <li><strong>SQL反向解析</strong>：从现有的StringBuffer/StringBuilder代码中提取SQL语句，支持多种编程语言</li>
+        <li><strong>批量删除存储过程生成</strong>：根据配置生成批量删除历史数据的存储过程，提供预配置模板</li>
     </ul>
     <h4>主要特性：</h4>
     <ul>
         <li>智能表名识别和提取</li>
         <li>多种分表后缀生成策略（数字序列、年份、年月等）</li>
         <li>支持多种编程语言的StringBuffer代码生成</li>
+        <li>从StringBuffer/StringBuilder代码中反向解析SQL语句</li>
+        <li>预配置的批量删除存储过程模板，适用于常见场景</li>
         <li>友好的用户界面和配置选项</li>
         <li>一键复制和导出功能</li>
     </ul>
@@ -102,6 +110,24 @@
                 description="将SQL转换为StringBuffer/StringBuilder代码">
             <add-to-group group-id="CodeMenu" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift B"/>
+        </action>
+        
+        <!-- SQL反向解析Action -->
+        <action id="SqlReverse.ParseSql" 
+                class="com.github.xucux.ysql.actions.SqlReverseAction"
+                text="反向解析SQL"
+                description="从StringBuffer/StringBuilder代码中提取SQL语句">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift R"/>
+        </action>
+        
+        <!-- 批量删除存储过程生成Action -->
+        <action id="BatchDelete.GenerateProcedure" 
+                class="com.github.xucux.ysql.actions.BatchDeleteAction"
+                text="生成批量删除存储过程"
+                description="根据配置生成批量删除历史数据的存储过程">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift D"/>
         </action>
         
         <!-- 打开Ysql工具窗口Action -->

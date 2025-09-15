@@ -1,8 +1,11 @@
 package com.github.xucux.ysql.services
 
+import com.github.xucux.ysql.models.CodeLanguage
+import com.github.xucux.ysql.models.SqlReverseResult
 import com.github.xucux.ysql.models.StringBufferConfig
 import com.github.xucux.ysql.models.StringBufferResult
 import com.github.xucux.ysql.utils.CodeGenerator
+import com.github.xucux.ysql.utils.SqlReverseParser
 import com.intellij.openapi.components.Service
 
 /**
@@ -33,6 +36,46 @@ class StringBufferService {
         } else {
             "预览生成失败：${result.errorMessage}"
         }
+    }
+    
+    /**
+     * 反向解析SQL语句
+     * 从StringBuffer/StringBuilder代码中提取SQL语句
+     * @param code 包含StringBuffer/StringBuilder的代码
+     * @param language 编程语言类型（可选，会自动检测）
+     * @return 解析结果
+     */
+    fun reverseParseSql(code: String, language: CodeLanguage? = null): SqlReverseResult {
+        val detectedLanguage = language ?: SqlReverseParser.detectLanguage(code)
+        return SqlReverseParser.parseSqlFromCode(code, detectedLanguage)
+    }
+    
+    /**
+     * 检测代码中的编程语言类型
+     * @param code 代码内容
+     * @return 检测到的编程语言
+     */
+    fun detectCodeLanguage(code: String): CodeLanguage {
+        return SqlReverseParser.detectLanguage(code)
+    }
+    
+    /**
+     * 验证代码是否包含StringBuffer/StringBuilder
+     * @param code 代码内容
+     * @return 是否包含StringBuffer/StringBuilder
+     */
+    fun containsStringBuffer(code: String): Boolean {
+        return SqlReverseParser.containsStringBuffer(code)
+    }
+    
+    /**
+     * 获取代码中的变量名
+     * @param code 代码内容
+     * @param language 编程语言
+     * @return 变量名列表
+     */
+    fun extractVariableNames(code: String, language: CodeLanguage): List<String> {
+        return SqlReverseParser.extractVariableNames(code, language)
     }
     
     /**
@@ -159,6 +202,154 @@ class StringBufferService {
         }
         
         return suggestions
+    }
+    
+    /**
+     * 验证生成的代码语法
+     * @param code 生成的代码
+     * @param language 编程语言
+     * @return 验证结果
+     */
+    fun validateGeneratedCode(code: String, language: CodeLanguage): ValidationResult {
+        return when (language) {
+            CodeLanguage.JAVA -> validateJavaSyntax(code)
+            CodeLanguage.CSHARP -> validateCSharpSyntax(code)
+            CodeLanguage.KOTLIN -> validateKotlinSyntax(code)
+            CodeLanguage.SCALA -> validateScalaSyntax(code)
+            CodeLanguage.GROOVY -> validateGroovySyntax(code)
+        }
+    }
+    
+    /**
+     * 验证Java语法
+     */
+    private fun validateJavaSyntax(code: String): ValidationResult {
+        val errors = mutableListOf<String>()
+        
+        // 检查StringBuffer声明
+        if (!code.contains("StringBuffer") && !code.contains("StringBuilder")) {
+            errors.add("缺少StringBuffer或StringBuilder声明")
+        }
+        
+        // 检查new关键字
+        if (!code.contains("new ")) {
+            errors.add("Java中缺少new关键字")
+        }
+        
+        // 检查分号
+        val lines = code.split("\n")
+        lines.forEach { line ->
+            val trimmed = line.trim()
+            if (trimmed.contains("StringBuffer") || trimmed.contains("StringBuilder") || 
+                trimmed.contains("append") || trimmed.contains("String final")) {
+                if (!trimmed.endsWith(";")) {
+                    errors.add("Java语句缺少分号: $trimmed")
+                }
+            }
+        }
+        
+        return if (errors.isEmpty()) {
+            ValidationResult(true, "Java语法验证通过")
+        } else {
+            ValidationResult(false, "Java语法错误: ${errors.joinToString(", ")}")
+        }
+    }
+    
+    /**
+     * 验证C#语法
+     */
+    private fun validateCSharpSyntax(code: String): ValidationResult {
+        val errors = mutableListOf<String>()
+        
+        // 检查StringBuilder声明
+        if (!code.contains("StringBuilder")) {
+            errors.add("缺少StringBuilder声明")
+        }
+        
+        // 检查Append方法（大写A）
+        if (code.contains(".append(")) {
+            errors.add("C#中应该使用Append而不是append")
+        }
+        
+        // 检查string类型（小写s）
+        if (code.contains("String final")) {
+            errors.add("C#中应该使用string而不是String")
+        }
+        
+        return if (errors.isEmpty()) {
+            ValidationResult(true, "C#语法验证通过")
+        } else {
+            ValidationResult(false, "C#语法错误: ${errors.joinToString(", ")}")
+        }
+    }
+    
+    /**
+     * 验证Kotlin语法
+     */
+    private fun validateKotlinSyntax(code: String): ValidationResult {
+        val errors = mutableListOf<String>()
+        
+        // 检查val关键字
+        if (!code.contains("val ")) {
+            errors.add("Kotlin中缺少val关键字")
+        }
+        
+        // 检查不应该有new关键字
+        if (code.contains("new ")) {
+            errors.add("Kotlin中不应该使用new关键字")
+        }
+        
+        // 检查不应该有分号
+        if (code.contains(";")) {
+            errors.add("Kotlin中通常不使用分号")
+        }
+        
+        return if (errors.isEmpty()) {
+            ValidationResult(true, "Kotlin语法验证通过")
+        } else {
+            ValidationResult(false, "Kotlin语法错误: ${errors.joinToString(", ")}")
+        }
+    }
+    
+    /**
+     * 验证Scala语法
+     */
+    private fun validateScalaSyntax(code: String): ValidationResult {
+        val errors = mutableListOf<String>()
+        
+        // 检查val关键字
+        if (!code.contains("val ")) {
+            errors.add("Scala中缺少val关键字")
+        }
+        
+        // 检查new关键字
+        if (!code.contains("new ")) {
+            errors.add("Scala中需要new关键字")
+        }
+        
+        return if (errors.isEmpty()) {
+            ValidationResult(true, "Scala语法验证通过")
+        } else {
+            ValidationResult(false, "Scala语法错误: ${errors.joinToString(", ")}")
+        }
+    }
+    
+    /**
+     * 验证Groovy语法
+     */
+    private fun validateGroovySyntax(code: String): ValidationResult {
+        val errors = mutableListOf<String>()
+        
+        // 检查def关键字
+        if (!code.contains("def ")) {
+            errors.add("Groovy中缺少def关键字")
+        }
+        
+        return if (errors.isEmpty()) {
+            ValidationResult(true, "Groovy语法验证通过")
+        } else {
+            ValidationResult(false, "Groovy语法错误: ${errors.joinToString(", ")}")
+        }
     }
     
     /**

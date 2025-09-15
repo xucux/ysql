@@ -26,8 +26,8 @@ class StringBufferConfigDialog(
     
     private val variableNameField = JBTextField("sql")
     private val languageComboBox = JComboBox(CodeLanguage.values())
-    private val addCommentsCheckBox = JBCheckBox("添加注释", true)
-    private val formatCodeCheckBox = JBCheckBox("格式化代码", true)
+    private val addCommentsCheckBox = JBCheckBox("添加注释", false)
+    private val formatCodeCheckBox = JBCheckBox("格式化代码", false)
     private val sqlTextArea = JBTextArea(10, 50)
     
     private val previewButton = JButton("预览代码")

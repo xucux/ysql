@@ -66,7 +66,7 @@ data class ShardingResult(
             appendLine(getStatistics())
             appendLine()
             appendLine("- 生成的分表SQL：")
-//            appendLine("=" * 50)
+            appendLine("=".repeat(50))
             appendLine(getCombinedSqls())
         }
     }

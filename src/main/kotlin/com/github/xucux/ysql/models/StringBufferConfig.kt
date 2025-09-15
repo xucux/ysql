@@ -23,12 +23,12 @@ data class StringBufferConfig(
     /**
      * 是否添加注释
      */
-    val addComments: Boolean = true,
+    val addComments: Boolean = false,
     
     /**
      * 是否格式化代码
      */
-    val formatCode: Boolean = true
+    val formatCode: Boolean = false
 )
 
 /**
@@ -61,8 +61,22 @@ enum class CodeLanguage(
      */
     fun getStringEscapeMethod(): (String) -> String {
         return when (this) {
-            CSHARP -> { str -> str.replace("\"", "\\\"") }
-            else -> { str -> str.replace("\"", "\\\"") }
+            CSHARP -> { str -> 
+                str.replace("\\", "\\\\")
+                   .replace("\"", "\\\"")
+                   .replace("\n", "\\n")
+                   .replace("\t", "\\t")
+                   .replace("\r", "\\r")
+                   .replace("\b", "\\b")
+            }
+            else -> { str -> 
+                str.replace("\\", "\\\\")
+                   .replace("\"", "\\\"")
+                   .replace("\n", "\\n")
+                   .replace("\t", "\\t")
+                   .replace("\r", "\\r")
+                   .replace("\b", "\\b")
+            }
         }
     }
 }
