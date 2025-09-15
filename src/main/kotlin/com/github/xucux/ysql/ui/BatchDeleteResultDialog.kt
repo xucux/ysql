@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.components.JBTabbedPane
 import com.intellij.util.ui.FormBuilder
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -47,7 +48,7 @@ class BatchDeleteResultDialog(
         val mainPanel = JPanel(BorderLayout())
         
         // 创建标签页
-        val tabbedPane = JTabbedPane()
+        val tabbedPane = JBTabbedPane()
         
         // 存储过程标签页
         val procedurePanel = JPanel(BorderLayout())

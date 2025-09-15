@@ -10,7 +10,6 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.TextRange
@@ -48,7 +47,7 @@ class ShardingSqlAction : AnAction("生成分表SQL", "从单个SQL语句生成�
             // 在后台线程中生成分表SQL
             ApplicationManager.getApplication().executeOnPooledThread {
                 try {
-                    val shardingService = ServiceManager.getService(SqlShardingService::class.java)
+                    val shardingService = ApplicationManager.getApplication().getService(SqlShardingService::class.java)
                     val result = shardingService.generateShardingSql(config)
                     
                     // 在UI线程中显示结果

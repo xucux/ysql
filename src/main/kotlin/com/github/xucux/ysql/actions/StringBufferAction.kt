@@ -8,7 +8,6 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.TextRange
@@ -46,7 +45,7 @@ class StringBufferAction : AnAction("生成StringBuffer代码", "将SQL转换为
             // 在后台线程中生成代码
             ApplicationManager.getApplication().executeOnPooledThread {
                 try {
-                    val stringBufferService = ServiceManager.getService(StringBufferService::class.java)
+                    val stringBufferService = ApplicationManager.getApplication().getService(StringBufferService::class.java)
                     val result = stringBufferService.generateStringBufferCode(config)
                     
                     // 在UI线程中显示结果

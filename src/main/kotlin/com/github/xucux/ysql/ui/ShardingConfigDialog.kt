@@ -4,13 +4,14 @@ import com.github.xucux.ysql.models.ShardingConfig
 import com.github.xucux.ysql.models.SuffixType
 import com.github.xucux.ysql.services.SqlShardingService
 import com.github.xucux.ysql.services.TableNameExtractorService
-import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
+import com.intellij.openapi.ui.ComboBox
 import javax.swing.SpinnerNumberModel
 import com.intellij.util.ui.FormBuilder
 import java.awt.BorderLayout
@@ -27,7 +28,7 @@ class ShardingConfigDialog(
 ) : DialogWrapper(project) {
     
     private val tableNamesField = JBTextField()
-    private val suffixTypeComboBox = JComboBox(SuffixType.values())
+    private val suffixTypeComboBox = ComboBox(SuffixType.values())
     private val suffixFormatField = JBTextField().apply { text = "_" }
     private val shardCountField = JSpinner(SpinnerNumberModel(1, 1, 1000, 1))
     private val startYearField = JSpinner(SpinnerNumberModel(2020, 1900, 2100, 1))
@@ -93,7 +94,7 @@ class ShardingConfigDialog(
         }
         
         try {
-            val extractorService = ServiceManager.getService(TableNameExtractorService::class.java)
+            val extractorService = ApplicationManager.getApplication().getService(TableNameExtractorService::class.java)
             val result = extractorService.validateAndExtractTableNames(sql)
             
             if (result.success) {
@@ -125,7 +126,7 @@ class ShardingConfigDialog(
     private fun showPreview() {
         val config = getConfig()
         try {
-            val shardingService = ServiceManager.getService(SqlShardingService::class.java)
+            val shardingService = ApplicationManager.getApplication().getService(SqlShardingService::class.java)
             val preview = shardingService.getShardingPreview(config)
             previewTextArea.text = preview
         } catch (e: Exception) {

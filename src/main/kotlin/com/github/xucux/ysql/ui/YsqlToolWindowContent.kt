@@ -7,8 +7,9 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBTabbedPane
 import javax.swing.JButton
-import javax.swing.JComboBox
+import com.intellij.openapi.ui.ComboBox
 import javax.swing.JSpinner
 import com.intellij.util.ui.FormBuilder
 import javax.swing.JSeparator
@@ -39,12 +40,12 @@ import javax.swing.SpinnerNumberModel
  */
 class YsqlToolWindowContent(private val project: Project) {
     
-    private val tabbedPane = JTabbedPane()
+    private val tabbedPane = JBTabbedPane()
     private val mainPanel = JPanel(BorderLayout())
     
     // 分表SQL解析相关组件
     private val shardingTableNamesField = JBTextField()
-    private val shardingSuffixTypeComboBox = JComboBox(SuffixType.values())
+    private val shardingSuffixTypeComboBox = ComboBox(SuffixType.values())
     private val shardingSuffixFormatField = JBTextField().apply { text = "_" }
     private val shardingShardCountField = JSpinner(SpinnerNumberModel(16, 1, 1000, 1))
     private val shardingStartYearField = JSpinner(SpinnerNumberModel(2020, 1900, 2100, 1))
@@ -56,7 +57,7 @@ class YsqlToolWindowContent(private val project: Project) {
     
     // StringBuffer代码生成相关组件
     private val stringBufferVariableNameField = JBTextField().apply { text = "sql" }
-    private val stringBufferLanguageComboBox = JComboBox(CodeLanguage.values())
+    private val stringBufferLanguageComboBox = ComboBox(CodeLanguage.values())
     private val stringBufferAddCommentsCheckBox = JCheckBox("添加注释", false)
     private val stringBufferFormatCodeCheckBox = JCheckBox("格式化代码", false)
     private val stringBufferSqlTextArea = JBTextArea(8, 40)
@@ -65,13 +66,13 @@ class YsqlToolWindowContent(private val project: Project) {
     
     // SQL反向解析相关组件
     private val reverseParseCodeTextArea = JBTextArea(8, 40)
-    private val reverseParseLanguageComboBox = JComboBox(CodeLanguage.values())
+    private val reverseParseLanguageComboBox = ComboBox(CodeLanguage.values())
     private val reverseParseAutoDetectCheckBox = JCheckBox("自动检测语言", true)
     private val reverseParseButton = JButton("反向解析SQL")
     private val reverseParseResultTextArea = JBTextArea(8, 40)
     
     // 批量删除存储过程相关组件
-    private val batchDeleteTemplateComboBox = JComboBox(BatchDeleteTemplate.values())
+    private val batchDeleteTemplateComboBox = ComboBox(BatchDeleteTemplate.values())
     private val batchDeleteApplyTemplateButton = JButton("应用模板")
     private val batchDeleteProcedureNameField = JBTextField("DropHistoryDataByLimit")
     private val batchDeleteMainTableNameField = JBTextField("system_logs")
@@ -264,7 +265,7 @@ class YsqlToolWindowContent(private val project: Project) {
         
         // 创建配置面板（左侧）
         val configPanel = JPanel(BorderLayout())
-        val configTabbedPane = JTabbedPane()
+        val configTabbedPane = JBTabbedPane()
         configTabbedPane.addTab("模板选择", templatePanel)
         configTabbedPane.addTab("基础配置", basicConfigPanel)
         configTabbedPane.addTab("参数配置", paramConfigPanel)
@@ -369,7 +370,7 @@ class YsqlToolWindowContent(private val project: Project) {
         }
         
         try {
-            val extractorService = ServiceManager.getService(TableNameExtractorService::class.java)
+            val extractorService = ApplicationManager.getApplication().getService(TableNameExtractorService::class.java)
             val result = extractorService.validateAndExtractTableNames(sql)
             
             if (result.success) {
@@ -396,7 +397,7 @@ class YsqlToolWindowContent(private val project: Project) {
         // 在后台线程中生成SQL
         ApplicationManager.getApplication().executeOnPooledThread {
             try {
-                val shardingService = ServiceManager.getService(SqlShardingService::class.java)
+                val shardingService = ApplicationManager.getApplication().getService(SqlShardingService::class.java)
                 val result = shardingService.generateShardingSql(config)
                 
                 // 在UI线程中显示结果
@@ -428,7 +429,7 @@ class YsqlToolWindowContent(private val project: Project) {
         // 在后台线程中生成代码
         ApplicationManager.getApplication().executeOnPooledThread {
             try {
-                val stringBufferService = ServiceManager.getService(StringBufferService::class.java)
+                val stringBufferService = ApplicationManager.getApplication().getService(StringBufferService::class.java)
                 val result = stringBufferService.generateStringBufferCode(config)
                 
                 // 在UI线程中显示结果
@@ -455,7 +456,7 @@ class YsqlToolWindowContent(private val project: Project) {
         }
         
         // 检查是否包含StringBuffer/StringBuilder
-        val stringBufferService = ServiceManager.getService(StringBufferService::class.java)
+        val stringBufferService = ApplicationManager.getApplication().getService(StringBufferService::class.java)
         if (!stringBufferService.containsStringBuffer(code)) {
             Messages.showWarningDialog(
                 "输入的代码中未找到StringBuffer或StringBuilder语句，请检查代码格式。",
@@ -515,7 +516,7 @@ class YsqlToolWindowContent(private val project: Project) {
         val tableName = batchDeleteMainTableNameField.text.trim()
         if (tableName.isNotBlank() && batchDeleteProcedureNameField.text == "DropHistoryDataByLimit") {
             try {
-                val batchDeleteService = ServiceManager.getService(BatchDeleteService::class.java)
+                val batchDeleteService = ApplicationManager.getApplication().getService(BatchDeleteService::class.java)
                 val defaultName = batchDeleteService.generateDefaultProcedureName(tableName)
                 batchDeleteProcedureNameField.text = defaultName
             } catch (e: Exception) {
@@ -536,7 +537,7 @@ class YsqlToolWindowContent(private val project: Project) {
         // 在后台线程中生成存储过程
         ApplicationManager.getApplication().executeOnPooledThread {
             try {
-                val batchDeleteService = ServiceManager.getService(BatchDeleteService::class.java)
+                val batchDeleteService = ApplicationManager.getApplication().getService(BatchDeleteService::class.java)
                 val result = batchDeleteService.generateBatchDeleteProcedure(config)
                 
                 // 在UI线程中显示结果

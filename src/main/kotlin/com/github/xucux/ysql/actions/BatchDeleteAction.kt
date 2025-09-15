@@ -8,7 +8,6 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.TextRange
@@ -31,7 +30,7 @@ class BatchDeleteAction : AnAction("生成批量删除存储过程", "根据配�
             // 在后台线程中生成存储过程
             ApplicationManager.getApplication().executeOnPooledThread {
                 try {
-                    val batchDeleteService = ServiceManager.getService(BatchDeleteService::class.java)
+                    val batchDeleteService = ApplicationManager.getApplication().getService(BatchDeleteService::class.java)
                     val result = batchDeleteService.generateBatchDeleteProcedure(config)
                     
                     // 在UI线程中显示结果

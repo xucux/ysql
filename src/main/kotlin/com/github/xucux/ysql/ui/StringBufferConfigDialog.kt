@@ -3,13 +3,14 @@ package com.github.xucux.ysql.ui
 import com.github.xucux.ysql.models.CodeLanguage
 import com.github.xucux.ysql.models.StringBufferConfig
 import com.github.xucux.ysql.services.StringBufferService
-import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
+import com.intellij.openapi.ui.ComboBox
 import com.intellij.util.ui.FormBuilder
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -25,7 +26,7 @@ class StringBufferConfigDialog(
 ) : DialogWrapper(project) {
     
     private val variableNameField = JBTextField("sql")
-    private val languageComboBox = JComboBox(CodeLanguage.values())
+    private val languageComboBox = ComboBox(CodeLanguage.values())
     private val addCommentsCheckBox = JBCheckBox("添加注释", false)
     private val formatCodeCheckBox = JBCheckBox("格式化代码", false)
     private val sqlTextArea = JBTextArea(10, 50)
@@ -82,7 +83,7 @@ class StringBufferConfigDialog(
     private fun showPreview() {
         val config = getConfig()
         try {
-            val stringBufferService = ServiceManager.getService(StringBufferService::class.java)
+            val stringBufferService = ApplicationManager.getApplication().getService(StringBufferService::class.java)
             val preview = stringBufferService.getCodePreview(config)
             previewTextArea.text = preview
         } catch (e: Exception) {
@@ -93,7 +94,7 @@ class StringBufferConfigDialog(
     private fun showTemplate() {
         val selectedLanguage = languageComboBox.selectedItem as CodeLanguage
         try {
-            val stringBufferService = ServiceManager.getService(StringBufferService::class.java)
+            val stringBufferService = ApplicationManager.getApplication().getService(StringBufferService::class.java)
             val template = stringBufferService.getCodeTemplate(selectedLanguage)
             
             val templateDialog = object : DialogWrapper(project) {
@@ -160,7 +161,7 @@ class StringBufferConfigDialog(
     override fun doOKAction() {
         // 验证配置
         val config = getConfig()
-        val stringBufferService = ServiceManager.getService(StringBufferService::class.java)
+        val stringBufferService = ApplicationManager.getApplication().getService(StringBufferService::class.java)
         val validationResult = stringBufferService.validateConfig(config)
         
         if (!validationResult.isValid) {

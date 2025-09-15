@@ -11,9 +11,12 @@
     <vendor email="oxu_uxo@foxmail.com" url="https://xucux.github.io/">xucux</vendor>
 
     <idea-version since-build="231"/>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <change-notes>
         <![CDATA[
+           1.1.0
+           - Add batch delete procedure generator
+           - Optimize the deprecated components
            1.0.0
            - Initial release
         ]]>

@@ -3,13 +3,15 @@ package com.github.xucux.ysql.ui
 import com.github.xucux.ysql.models.BatchDeleteConfig
 import com.github.xucux.ysql.models.BatchDeleteTemplate
 import com.github.xucux.ysql.services.BatchDeleteService
-import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
+import com.intellij.ui.components.JBTabbedPane
+import com.intellij.openapi.ui.ComboBox
 import com.intellij.util.ui.FormBuilder
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -42,7 +44,7 @@ class BatchDeleteConfigDialog(
     private val procedureCommentField = JBTextField("循环删除历史数据-根据limit查询主键防止临时表，再联表删除")
     
     // 模板选择组件
-    private val templateComboBox = JComboBox(BatchDeleteTemplate.values())
+    private val templateComboBox = ComboBox(BatchDeleteTemplate.values())
     private val applyTemplateButton = JButton("应用模板")
     private val templateDescriptionArea = JBTextArea(4, 50)
     
@@ -152,7 +154,7 @@ class BatchDeleteConfigDialog(
         val tableName = mainTableNameField.text.trim()
         if (tableName.isNotBlank() && procedureNameField.text == "DropHistoryDataByLimit") {
             try {
-                val batchDeleteService = ServiceManager.getService(BatchDeleteService::class.java)
+                val batchDeleteService = ApplicationManager.getApplication().getService(BatchDeleteService::class.java)
                 val defaultName = batchDeleteService.generateDefaultProcedureName(tableName)
                 procedureNameField.text = defaultName
             } catch (e: Exception) {
@@ -164,7 +166,7 @@ class BatchDeleteConfigDialog(
     private fun showPreview() {
         val config = getConfig()
         try {
-            val batchDeleteService = ServiceManager.getService(BatchDeleteService::class.java)
+            val batchDeleteService = ApplicationManager.getApplication().getService(BatchDeleteService::class.java)
             val result = batchDeleteService.generateBatchDeleteProcedure(config)
             if (result.success) {
                 previewTextArea.text = result.generatedProcedure
@@ -179,7 +181,7 @@ class BatchDeleteConfigDialog(
     private fun showTemplate() {
         try {
             val selectedTemplate = templateComboBox.selectedItem as BatchDeleteTemplate
-            val batchDeleteService = ServiceManager.getService(BatchDeleteService::class.java)
+            val batchDeleteService = ApplicationManager.getApplication().getService(BatchDeleteService::class.java)
             
             // 生成模板的存储过程预览
             val result = batchDeleteService.generateBatchDeleteProcedure(selectedTemplate.config)
@@ -280,7 +282,7 @@ class BatchDeleteConfigDialog(
             .panel
         
         // 创建标签页
-        val tabbedPane = JTabbedPane()
+        val tabbedPane = JBTabbedPane()
         tabbedPane.addTab("模板选择", templatePanel)
         tabbedPane.addTab("基础配置", basicConfigPanel)
         tabbedPane.addTab("参数配置", paramConfigPanel)
@@ -302,7 +304,7 @@ class BatchDeleteConfigDialog(
     override fun doOKAction() {
         // 验证配置
         val config = getConfig()
-        val batchDeleteService = ServiceManager.getService(BatchDeleteService::class.java)
+        val batchDeleteService = ApplicationManager.getApplication().getService(BatchDeleteService::class.java)
         
         // 验证存储过程名称
         val procedureNameValidation = batchDeleteService.validateProcedureName(config.procedureName)

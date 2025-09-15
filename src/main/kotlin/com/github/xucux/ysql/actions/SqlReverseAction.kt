@@ -7,7 +7,6 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.TextRange
@@ -37,7 +36,7 @@ class SqlReverseAction : AnAction("反向解析SQL", "从StringBuffer/StringBuil
         }
         
         // 检查是否包含StringBuffer/StringBuilder
-        val stringBufferService = ServiceManager.getService(StringBufferService::class.java)
+        val stringBufferService = ApplicationManager.getApplication().getService(StringBufferService::class.java)
         if (!stringBufferService.containsStringBuffer(selectedText)) {
             Messages.showWarningDialog(
                 project,
