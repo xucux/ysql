@@ -8,17 +8,19 @@
     <name>YSql</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="oxu_uxo@foxmail.com" url="https://xucux.github.io/">xucux</vendor>
+    <vendor email="xucux@foxmail.com" url="https://xucux.github.io/">xucux</vendor>
 
     <idea-version since-build="231"/>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <change-notes>
         <![CDATA[
-           1.1.0
-           - Add batch delete procedure generator
-           - Optimize the deprecated components
-           1.0.0
-           - Initial release
+    <p>1.1.1</p>
+    <p>- Add the function of generating sharding-table statistics </p>
+    <p>1.1.0</p>
+    <p>- Add batch delete procedure generator</p>
+    <p>- Optimize the deprecated components</p>
+    <p>1.0.0</p>
+    <p>- Initial release</p>
         ]]>
     </change-notes>
 
@@ -46,7 +48,7 @@
         <li>User-friendly interface and configuration options</li>
         <li>One-click copy and export functionality</li>
     </ul>
-    <p>Email: xucux@foxmail.com</p>
+    <p>Blog: <a href="https://xucux.github.io/">xucux.github.io</a></p>
     <p><em>Make SQL sharding development and code generation more efficient!</em></p>
 
     <hr>
@@ -69,7 +71,7 @@
         <li>友好的用户界面和配置选项</li>
         <li>一键复制和导出功能</li>
     </ul>
-    <p>留言邮箱：xucux@foxmail.com</p>
+    <p>Blog：<a href="https://xucux.github.io/">xucux.github.io</a></p>
     <p><em>让SQL分表开发和代码生成变得更加高效！</em></p>
   ]]></description>
 

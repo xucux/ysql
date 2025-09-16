@@ -21,6 +21,7 @@ import com.github.xucux.ysql.models.SqlReverseResult
 import com.github.xucux.ysql.models.BatchDeleteConfig
 import com.github.xucux.ysql.models.BatchDeleteTemplate
 import com.github.xucux.ysql.services.SqlShardingService
+import com.github.xucux.ysql.services.ShardingStatisticsService
 import com.github.xucux.ysql.services.StringBufferService
 import com.github.xucux.ysql.services.TableNameExtractorService
 import com.github.xucux.ysql.services.BatchDeleteService
@@ -53,6 +54,7 @@ class YsqlToolWindowContent(private val project: Project) {
     private val shardingSqlTextArea = JBTextArea(8, 40)
     private val shardingExtractTableNamesButton = JButton("自动识别表名")
     private val shardingGenerateButton = JButton("生成分表SQL")
+    private val shardingStatisticsButton = JButton("生成分表统计")
     private val shardingResultTextArea = JBTextArea(8, 40)
     
     // StringBuffer代码生成相关组件
@@ -163,10 +165,15 @@ class YsqlToolWindowContent(private val project: Project) {
             .addLabeledComponent("起始月份:", shardingStartMonthField)
             .panel
         
+        // 创建按钮面板
+        val buttonPanel = JPanel()
+        buttonPanel.add(shardingGenerateButton)
+        buttonPanel.add(shardingStatisticsButton)
+        
         // 创建SQL输入面板
         val sqlInputPanel = FormBuilder.createFormBuilder()
             .addLabeledComponent("原始SQL:", JBScrollPane(shardingSqlTextArea))
-            .addComponent(shardingGenerateButton)
+            .addComponent(buttonPanel)
             .addLabeledComponent("生成结果:", JBScrollPane(shardingResultTextArea))
             .panel
         
@@ -313,6 +320,11 @@ class YsqlToolWindowContent(private val project: Project) {
             generateShardingSql()
         }
         
+        // 生成分表统计按钮
+        shardingStatisticsButton.addActionListener {
+            generateShardingStatistics()
+        }
+        
         // 后缀类型变化时更新相关字段的可见性
         shardingSuffixTypeComboBox.addActionListener {
             updateShardingFieldVisibility()
@@ -416,6 +428,44 @@ class YsqlToolWindowContent(private val project: Project) {
         }
     }
     
+    private fun generateShardingStatistics() {
+        // 获取当前配置
+        val currentConfig = getShardingConfig()
+        
+        // 验证基础配置
+        val validationResult = validateShardingConfig(currentConfig)
+        if (!validationResult.isValid) {
+            Messages.showErrorDialog(validationResult.message, "配置错误")
+            return
+        }
+        
+        // 显示统计配置弹窗
+        val dialog = ShardingStatisticsConfigDialog(project, currentConfig.originalSql)
+        if (dialog.showAndGet()) {
+            val fieldStatisticsConfig = dialog.getFieldStatisticsConfig()
+            
+            // 在后台线程中生成统计SQL
+            ApplicationManager.getApplication().executeOnPooledThread {
+                try {
+                    val statisticsService = ApplicationManager.getApplication().getService(ShardingStatisticsService::class.java)
+                    val result = statisticsService.generateShardingStatistics(currentConfig, fieldStatisticsConfig)
+                    
+                    // 在UI线程中显示结果
+                    ApplicationManager.getApplication().invokeLater {
+                        if (result.success) {
+                            shardingResultTextArea.text = result.getFormattedResult()
+                        } else {
+                            Messages.showErrorDialog("生成分表统计SQL失败：${result.errorMessage}", "错误")
+                        }
+                    }
+                } catch (e: Exception) {
+                    ApplicationManager.getApplication().invokeLater {
+                        Messages.showErrorDialog("生成分表统计SQL时发生异常：${e.message}", "异常")
+                    }
+                }
+            }
+        }
+    }
     
     private fun generateStringBufferCode() {
         val config = getStringBufferConfig()

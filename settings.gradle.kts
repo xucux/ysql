@@ -14,6 +14,7 @@ pluginManagement {
 
         maven("https://repo.huaweicloud.com/repository/jetbrains-intellij-releases")
         maven("https://repo.huaweicloud.com/repository/jetbrains-public")
+        maven("https://oss.sonatype.org/content/repositories/snapshots/")
         // 原始仓库作为备用
         gradlePluginPortal()
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.github.xucux"
-version = "1.1.0"
+version = "1.1.1"
 
 repositories {
     // 阿里云镜像仓库 - 国内访问速度更快
@@ -47,7 +47,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("231")
-        untilBuild.set("241.*")
+//        untilBuild.set("252.*")
     }
 
     signPlugin {
