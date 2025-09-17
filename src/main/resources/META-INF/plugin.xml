@@ -11,9 +11,11 @@
     <vendor email="xucux@foxmail.com" url="https://xucux.github.io/">xucux</vendor>
 
     <idea-version since-build="231"/>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
     <change-notes>
         <![CDATA[
+    <p>1.1.2</p>
+    <p>- Update UI </p>
     <p>1.1.1</p>
     <p>- Add the function of generating sharding-table statistics </p>
     <p>1.1.0</p>

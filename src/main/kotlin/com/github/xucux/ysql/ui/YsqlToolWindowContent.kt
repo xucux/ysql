@@ -42,7 +42,9 @@ import javax.swing.SpinnerNumberModel
 class YsqlToolWindowContent(private val project: Project) {
     
     private val tabbedPane = JBTabbedPane()
-    private val mainPanel = JPanel(BorderLayout())
+    private val stingBufferPanel = JPanel(BorderLayout())
+    private var shardingPanel : JPanel? = null
+    private var batchDeletePanel : JPanel? = null
     
     // 分表SQL解析相关组件
     private val shardingTableNamesField = JBTextField()
@@ -100,7 +102,7 @@ class YsqlToolWindowContent(private val project: Project) {
         setupTextAreas()
         
         // 创建分表SQL解析面板
-        val shardingPanel = createShardingPanel()
+        shardingPanel = createShardingPanel()
         
         // 创建StringBuffer代码生成面板
         val stringBufferPanel = createStringBufferPanel()
@@ -109,17 +111,17 @@ class YsqlToolWindowContent(private val project: Project) {
         val reverseParsePanel = createReverseParsePanel()
         
         // 创建批量删除存储过程面板
-        val batchDeletePanel = createBatchDeletePanel()
+        batchDeletePanel = createBatchDeletePanel()
         
         // 添加标签页
-        tabbedPane.addTab("分表SQL解析",  shardingPanel)
-        tabbedPane.addTab("StringBuffer代码生成",  stringBufferPanel)
-        tabbedPane.addTab("SQL反向解析",  reverseParsePanel)
-        tabbedPane.addTab("批量删除存储过程",batchDeletePanel)
+//        tabbedPane.addTab("分表SQL解析",  shardingPanel)
+        tabbedPane.addTab("代码包裹",  stringBufferPanel)
+        tabbedPane.addTab("代码清除",  reverseParsePanel)
+//        tabbedPane.addTab("批量删除存储过程",batchDeletePanel)
         
         // 设置主面板
-        mainPanel.add(tabbedPane, BorderLayout.CENTER)
-        mainPanel.preferredSize = Dimension(800, 600)
+        stingBufferPanel.add(tabbedPane, BorderLayout.CENTER)
+        stingBufferPanel.preferredSize = Dimension(800, 600)
     }
     
     private fun setupTextAreas() {
@@ -224,7 +226,7 @@ class YsqlToolWindowContent(private val project: Project) {
         
         // 创建反向解析面板
         val parsePanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("StringBuffer代码:", JBScrollPane(reverseParseCodeTextArea))
+            .addLabeledComponent("代码:", JBScrollPane(reverseParseCodeTextArea))
             .addComponent(reverseParseButton)
             .addLabeledComponent("解析结果:", JBScrollPane(reverseParseResultTextArea))
             .panel
@@ -724,8 +726,15 @@ class YsqlToolWindowContent(private val project: Project) {
         return ValidationResult(true, "配置验证通过")
     }
     
-    fun getContentPanel(): JComponent {
-        return mainPanel
+    fun getStringBufferPanel(): JComponent {
+        return stingBufferPanel!!
+    }
+    fun getShardingPanel() : JPanel {
+        return shardingPanel!!
+    }
+
+    fun getBatchDeletePanel() : JPanel {
+        return batchDeletePanel!!
     }
     
     private data class ValidationResult(
