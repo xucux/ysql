@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.github.xucux"
-version = "1.1.3-231"
+version = "1.1.3-201"
 
 repositories {
     // 阿里云镜像仓库 - 国内访问速度更快
@@ -37,17 +37,20 @@ intellij {
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {
-        sourceCompatibility = "17"
-        targetCompatibility = "17"
-        options.encoding = "UTF-8"
+        sourceCompatibility = "1.8"
+        targetCompatibility = "1.8"
     }
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
+        kotlinOptions.jvmTarget = "1.8"
+    }
+    withType<JavaExec> {
+        // 解决控制台中文乱码
+        jvmArgs = listOf("-Dfile.encoding=UTF-8", "-Dfile.stdout.encoding=UTF-8", "-Dfile.stderr.encoding=UTF-8")
     }
 
     patchPluginXml {
-        sinceBuild.set("231")
-        untilBuild.set("252.*")
+        sinceBuild.set("201.6668.113")
+        untilBuild.set("223.*")
     }
 
     signPlugin {
