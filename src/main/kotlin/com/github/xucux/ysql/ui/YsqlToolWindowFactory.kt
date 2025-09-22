@@ -45,11 +45,13 @@ class YsqlToolWindowFactory : ToolWindowFactory {
         // 创建分表解析工具窗口内容
         val shardingPanel = contentFactory.createContent(toolWindowContent.getShardingPanel(), "分表解析", false)
         val stringBufferPanel = contentFactory.createContent(toolWindowContent.getStringBufferPanel(), "StringBuffer", false)
+        val dynamicSqlPanel = contentFactory.createContent(toolWindowContent.getDynamicSqlPanel(), "动态语句", false)
         val batchDeletePanel = contentFactory.createContent(toolWindowContent.getBatchDeletePanel(), "批量删除", false)
         
 
         toolWindow.contentManager.addContent(shardingPanel)
         toolWindow.contentManager.addContent(stringBufferPanel)
+        toolWindow.contentManager.addContent(dynamicSqlPanel)
         toolWindow.contentManager.addContent(batchDeletePanel)
 
     }

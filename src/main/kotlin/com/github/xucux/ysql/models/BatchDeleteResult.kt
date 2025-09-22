@@ -53,7 +53,7 @@ data class BatchDeleteResult(
             appendLine("- 批量删除存储过程生成结果：")
             appendLine("- 存储过程名称：$procedureName")
             appendLine("- 主表名：$mainTableName")
-            appendLine("- 生成时间：${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date(generateTime))}")
+            appendLine("- 生成时间：${java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(generateTime), java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}")
             appendLine("- 状态：${if (success) "成功" else "失败"}")
             if (!success && errorMessage != null) {
                 appendLine("- 错误信息：$errorMessage")
@@ -108,7 +108,7 @@ data class BatchDeleteResult(
             appendLine("- 批量删除存储过程统计信息：")
             appendLine("- 存储过程名称：$procedureName")
             appendLine("- 主表名：$mainTableName")
-            appendLine("- 生成时间：${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date(generateTime))}")
+            appendLine("- 生成时间：${java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(generateTime), java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}")
             appendLine("- 状态：${if (success) "成功" else "失败"}")
             if (!success && errorMessage != null) {
                 appendLine("- 错误信息：$errorMessage")
