@@ -34,6 +34,10 @@ intellij {
     plugins.set(listOf(/* Plugin Dependencies */))
 }
 
+dependencies {
+    implementation("com.github.jsqlparser:jsqlparser:4.9")
+}
+
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {

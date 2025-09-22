@@ -1,8 +1,6 @@
 package com.github.xucux.ysql.utils
 
 import com.github.xucux.ysql.models.SuffixType
-import java.text.SimpleDateFormat
-import java.util.*
 
 /**
  * 后缀生成器
@@ -65,12 +63,11 @@ object SuffixGenerator {
      * @return 年月后缀
      */
     private fun generateYearMonthSuffix(index: Int, format: String, startYear: Int, startMonth: Int): String {
-        val calendar = Calendar.getInstance()
-        calendar.set(startYear, startMonth - 1, 1) // 月份从0开始
-        calendar.add(Calendar.MONTH, index)
+        val startDate = java.time.LocalDate.of(startYear, startMonth, 1)
+        val targetDate = startDate.plusMonths(index.toLong())
         
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH) + 1 // 月份从0开始，需要+1
+        val year = targetDate.year
+        val month = targetDate.monthValue
         
         return "$format$year${String.format("%02d", month)}"
     }

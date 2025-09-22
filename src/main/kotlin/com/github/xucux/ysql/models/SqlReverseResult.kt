@@ -44,7 +44,7 @@ data class SqlReverseResult(
             appendLine("// 编程语言：${language.displayName}")
             appendLine("// SQL片段数量：${sqlStatements.size}")
             appendLine("// 总字符数：${extractedSql.length}")
-            appendLine("// 解析时间：${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date(parseTime))}")
+            appendLine("// 解析时间：${java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(parseTime), java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}")
             appendLine("// 状态：${if (success) "成功" else "失败"}")
             if (!success && errorMessage != null) {
                 appendLine("// 错误信息：$errorMessage")

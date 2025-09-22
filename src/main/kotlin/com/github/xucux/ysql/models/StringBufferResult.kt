@@ -55,7 +55,7 @@ data class StringBufferResult(
             appendLine("// 变量名称：$variableName")
             appendLine("// 代码行数：$lineCount")
             appendLine("// 字符数量：$charCount")
-            appendLine("// 生成时间：${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date(generateTime))}")
+            appendLine("// 生成时间：${java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(generateTime), java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}")
             appendLine("// 状态：${if (success) "成功" else "失败"}")
             if (!success && errorMessage != null) {
                 appendLine("// 错误信息：$errorMessage")
