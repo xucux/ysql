@@ -38,7 +38,7 @@ class YsqlToolWindowFactory : ToolWindowFactory {
         // 创建主工具窗口内容
         val toolWindowContent = YsqlToolWindowContent(project)
 
-        val contentFactory = ContentFactory.getInstance()
+        val contentFactory = ContentFactory.SERVICE.getInstance()
         // 创建内容并添加到工具窗口
         // val content = contentFactory.createContent(toolWindowContent.getContentPanel(), "all", false)
         // toolWindow.contentManager.addContent(content)
