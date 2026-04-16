@@ -3,10 +3,13 @@ package com.github.xucux.ysql.config
 import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.ProjectManager
-import com.intellij.ui.dsl.builder.panel
+import java.awt.BorderLayout
+import java.awt.FlowLayout
 import java.util.Locale
 import javax.swing.JComboBox
 import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
 
 /**
  * 提供 `YsqlLanguageConfigurable` 相关配置界面。
@@ -25,10 +28,13 @@ class YsqlLanguageConfigurable : Configurable {
      */
     override fun createComponent(): JComponent {
         languageComboBox = JComboBox(LanguageOption.entries.toTypedArray())
-        component = panel {
-            row(I18nUtil.getMessage("settings.language.label")) {
-                cell(languageComboBox)
-            }.comment(I18nUtil.getMessage("settings.language.note"))
+        val formPanel = JPanel(FlowLayout(FlowLayout.LEFT, 8, 0)).apply {
+            add(JLabel(I18nUtil.getMessage("settings.language.label")))
+            add(languageComboBox)
+        }
+        component = JPanel(BorderLayout(0, 8)).apply {
+            add(formPanel, BorderLayout.NORTH)
+            toolTipText = I18nUtil.getMessage("settings.language.note")
         }
         reset()
         return component

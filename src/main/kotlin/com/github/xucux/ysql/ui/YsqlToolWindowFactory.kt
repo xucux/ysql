@@ -1,9 +1,7 @@
 package com.github.xucux.ysql.ui
 
-import com.github.xucux.ysql.actions.OpenYsqlSettingsAction
 import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -27,9 +25,6 @@ class YsqlToolWindowFactory : ToolWindowFactory {
         // 使用系统图标，自动适配主题
         toolWindow.setIcon(AllIcons.Toolwindows.ToolWindowRun)
         toolWindow.setStripeTitle(getToolWindowTitle())
-
-        // 在工具窗口的齿轮菜单中增加“YSql 设置”入口
-        toolWindow.setAdditionalGearActions(DefaultActionGroup(OpenYsqlSettingsAction()))
         super.init(toolWindow)
     }
 
