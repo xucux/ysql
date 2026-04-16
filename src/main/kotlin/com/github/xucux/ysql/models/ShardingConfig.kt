@@ -1,5 +1,7 @@
 package com.github.xucux.ysql.models
 
+import com.github.xucux.ysql.utils.I18nUtil
+
 /**
  * 分表配置模型
  * 用于存储分表生成的相关配置信息
@@ -44,9 +46,20 @@ data class ShardingConfig(
 /**
  * 分表后缀类型枚举
  */
-enum class SuffixType(val displayName: String, val description: String) {
-    SEQUENCE("数字序列", "生成 _0, _1, _2... 格式的后缀"),
-    YEAR("年份", "生成 _2020, _2021... 格式的后缀"),
-    YEAR_MONTH("年月", "生成 _202001, _202002... 格式的后缀"),
-    CUSTOM("自定义", "使用自定义格式生成后缀")
+enum class SuffixType(private val displayNameKey: String, private val descriptionKey: String) {
+    SEQUENCE("suffix.type.sequence", "suffix.type.sequence.description"),
+    YEAR("suffix.type.year", "suffix.type.year.description"),
+    YEAR_MONTH("suffix.type.year_month", "suffix.type.year_month.description"),
+    CUSTOM("suffix.type.custom", "suffix.type.custom.description");
+
+    val displayName: String
+        get() = I18nUtil.getMessage(displayNameKey)
+
+    val description: String
+        get() = I18nUtil.getMessage(descriptionKey)
+
+    /**
+     * 返回当前对象的显示文本。
+     */
+    override fun toString(): String = displayName
 }

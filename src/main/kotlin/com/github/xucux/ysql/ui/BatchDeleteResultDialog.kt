@@ -1,6 +1,7 @@
 package com.github.xucux.ysql.ui
 
 import com.github.xucux.ysql.models.BatchDeleteResult
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBScrollPane
@@ -26,7 +27,7 @@ class BatchDeleteResultDialog(
     private val statisticsTextArea = JBTextArea(8, 80)
     
     init {
-        title = "批量删除存储过程生成结果"
+        title = msg("dialog.batch.delete.result.title")
         init()
         
         // 设置存储过程文本区域
@@ -44,6 +45,9 @@ class BatchDeleteResultDialog(
         statisticsTextArea.font = java.awt.Font("Dialog", java.awt.Font.PLAIN, 11)
     }
     
+    /**
+     * 创建对话框主体面板。
+     */
     override fun createCenterPanel(): JComponent {
         val mainPanel = JPanel(BorderLayout())
         
@@ -53,12 +57,12 @@ class BatchDeleteResultDialog(
         // 存储过程标签页
         val procedurePanel = JPanel(BorderLayout())
         procedurePanel.add(JBScrollPane(procedureTextArea), BorderLayout.CENTER)
-        tabbedPane.addTab("生成存储过程", procedurePanel)
+        tabbedPane.addTab(msg("dialog.batch.delete.result.tab.procedure"), procedurePanel)
         
         // 统计信息标签页
         val statisticsPanel = JPanel(BorderLayout())
         statisticsPanel.add(JBScrollPane(statisticsTextArea), BorderLayout.CENTER)
-        tabbedPane.addTab("统计信息", statisticsPanel)
+        tabbedPane.addTab(msg("dialog.result.tab.statistics"), statisticsPanel)
         
         mainPanel.add(tabbedPane, BorderLayout.CENTER)
         
@@ -68,20 +72,32 @@ class BatchDeleteResultDialog(
         return mainPanel
     }
     
+    /**
+     * 创建当前对话框的操作列表。
+     */
     override fun createActions(): Array<Action> {
-        val copyAction = object : AbstractAction("复制存储过程") {
+        val copyAction = object : AbstractAction(msg("dialog.batch.delete.result.action.copy.procedure")) {
+            /**
+             * 执行当前动作。
+             */
             override fun actionPerformed(e: java.awt.event.ActionEvent?) {
                 copyToClipboard()
             }
         }
         
-        val exportAction = object : AbstractAction("导出到文件") {
+        val exportAction = object : AbstractAction(msg("dialog.action.export.file")) {
+            /**
+             * 执行当前动作。
+             */
             override fun actionPerformed(e: java.awt.event.ActionEvent?) {
                 exportToFile()
             }
         }
         
-        val callExampleAction = object : AbstractAction("生成调用示例") {
+        val callExampleAction = object : AbstractAction(msg("dialog.batch.delete.result.action.call.example")) {
+            /**
+             * 执行当前动作。
+             */
             override fun actionPerformed(e: java.awt.event.ActionEvent?) {
                 showCallExample()
             }
@@ -90,6 +106,9 @@ class BatchDeleteResultDialog(
         return arrayOf(copyAction, exportAction, callExampleAction, cancelAction)
     }
     
+    /**
+     * 复制 `toClipboard`。
+     */
     private fun copyToClipboard() {
         val clipboard = Toolkit.getDefaultToolkit().systemClipboard
         val selection = StringSelection(result.generatedProcedure)
@@ -97,22 +116,31 @@ class BatchDeleteResultDialog(
         
         JOptionPane.showMessageDialog(
             this.contentPanel,
-            "批量删除存储过程已复制到剪贴板",
-            "复制成功",
+            msg("message.batch.delete.procedure.copied"),
+            msg("dialog.title.success"),
             JOptionPane.INFORMATION_MESSAGE
         )
     }
     
+    /**
+     * 导出 `toFile`。
+     */
     private fun exportToFile() {
         val fileChooser = JFileChooser()
         fileChooser.selectedFile = java.io.File("${result.procedureName}_${System.currentTimeMillis()}.sql")
         fileChooser.fileFilter = object : javax.swing.filechooser.FileFilter() {
+            /**
+             * 处理 `accept` 逻辑。
+             */
             override fun accept(f: java.io.File): Boolean {
                 return f.isDirectory || f.name.lowercase().endsWith(".sql")
             }
             
+            /**
+             * 获取 `description`。
+             */
             override fun getDescription(): String {
-                return "SQL文件 (*.sql)"
+                return msg("dialog.file.filter.sql")
             }
         }
         
@@ -123,30 +151,36 @@ class BatchDeleteResultDialog(
                 
                 JOptionPane.showMessageDialog(
                     this.contentPanel,
-                    "批量删除存储过程已导出到：${file.absolutePath}",
-                    "导出成功",
+                    msg("message.file.export.success", file.absolutePath),
+                    msg("dialog.title.success"),
                     JOptionPane.INFORMATION_MESSAGE
                 )
             } catch (e: Exception) {
                 JOptionPane.showMessageDialog(
                     this.contentPanel,
-                    "导出失败：${e.message}",
-                    "导出错误",
+                    msg("message.file.export.failed", e.message ?: ""),
+                    msg("dialog.title.error"),
                     JOptionPane.ERROR_MESSAGE
                 )
             }
         }
     }
     
+    /**
+     * 展示 `callExample`。
+     */
     private fun showCallExample() {
         val callExample = generateCallExample()
         
         val exampleDialog = object : DialogWrapper(project) {
             init {
-                title = "存储过程调用示例"
+                title = msg("dialog.batch.delete.result.call.example.title")
                 init()
             }
             
+            /**
+             * 创建对话框主体面板。
+             */
             override fun createCenterPanel(): JComponent {
                 val textArea = JBTextArea(10, 60)
                 textArea.text = callExample
@@ -158,8 +192,14 @@ class BatchDeleteResultDialog(
                 return JBScrollPane(textArea)
             }
             
+            /**
+             * 创建当前对话框的操作列表。
+             */
             override fun createActions(): Array<Action> {
-                val copyExampleAction = object : AbstractAction("复制示例") {
+                val copyExampleAction = object : AbstractAction(msg("dialog.batch.delete.result.action.copy.example")) {
+                    /**
+                     * 执行当前动作。
+                     */
                     override fun actionPerformed(e: java.awt.event.ActionEvent?) {
                         val clipboard = Toolkit.getDefaultToolkit().systemClipboard
                         val selection = StringSelection(callExample)
@@ -181,32 +221,39 @@ class BatchDeleteResultDialog(
         exampleDialog.show()
     }
     
+    /**
+     * 生成 `callExample`。
+     */
     private fun generateCallExample(): String {
         return buildString {
-            appendLine("-- 批量删除存储过程调用示例")
-            appendLine("-- 存储过程名称：${result.procedureName}")
-            appendLine("-- 主表名：${result.mainTableName}")
+            appendLine(msg("batch.delete.result.example.header"))
+            appendLine(msg("batch.delete.result.example.procedure.name", result.procedureName))
+            appendLine(msg("batch.delete.result.example.main.table", result.mainTableName))
             appendLine()
-            appendLine("-- 基本调用示例：")
+            appendLine(msg("batch.delete.result.example.basic.call"))
             appendLine("CALL ${result.procedureName}(1000, '2023-01-01 00:00:00', 0);")
             appendLine()
-            appendLine("-- 参数说明：")
-            appendLine("-- 第一个参数：每次删除的行数（建议1000-5000）")
-            appendLine("-- 第二个参数：删除截至时间（格式：'YYYY-MM-DD HH:MM:SS'）")
-            appendLine("-- 第三个参数：起始主键值（通常为0）")
+            appendLine(msg("batch.delete.result.example.parameter.header"))
+            appendLine(msg("batch.delete.result.example.parameter.first"))
+            appendLine(msg("batch.delete.result.example.parameter.second"))
+            appendLine(msg("batch.delete.result.example.parameter.third"))
             appendLine()
-            appendLine("-- 其他调用示例：")
-            appendLine("-- 删除2022年之前的数据，每次删除5000行：")
+            appendLine(msg("batch.delete.result.example.other.call"))
+            appendLine(msg("batch.delete.result.example.other.call.2022"))
             appendLine("CALL ${result.procedureName}(5000, '2022-01-01 00:00:00', 0);")
             appendLine()
-            appendLine("-- 删除2021年之前的数据，每次删除2000行：")
+            appendLine(msg("batch.delete.result.example.other.call.2021"))
             appendLine("CALL ${result.procedureName}(2000, '2021-01-01 00:00:00', 0);")
             appendLine()
-            appendLine("-- 注意事项：")
-            appendLine("-- 1. 建议在业务低峰期执行")
-            appendLine("-- 2. 执行前请备份重要数据")
-            appendLine("-- 3. 可以根据服务器性能调整每次删除的行数")
-            appendLine("-- 4. 执行过程中会显示删除日志")
+            appendLine(msg("batch.delete.result.example.notice.header"))
+            appendLine(msg("batch.delete.result.example.notice.1"))
+            appendLine(msg("batch.delete.result.example.notice.2"))
+            appendLine(msg("batch.delete.result.example.notice.3"))
+            appendLine(msg("batch.delete.result.example.notice.4"))
         }
     }
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

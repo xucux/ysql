@@ -1,5 +1,7 @@
 package com.github.xucux.ysql.models
 
+import com.github.xucux.ysql.utils.I18nUtil
+
 /**
  * 批量删除存储过程结果模型
  * 用于存储批量删除存储过程生成的结果信息
@@ -50,22 +52,22 @@ data class BatchDeleteResult(
      */
     fun getFormattedResult(): String {
         return buildString {
-            appendLine("- 批量删除存储过程生成结果：")
-            appendLine("- 存储过程名称：$procedureName")
-            appendLine("- 主表名：$mainTableName")
-            appendLine("- 生成时间：${java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(generateTime), java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}")
-            appendLine("- 状态：${if (success) "成功" else "失败"}")
+            appendLine(msg("batch.delete.result.header"))
+            appendLine(msg("batch.delete.result.procedure.name", procedureName))
+            appendLine(msg("batch.delete.result.main.table.name", mainTableName))
+            appendLine(msg("batch.delete.result.generate.time", formatTime(generateTime)))
+            appendLine(msg("batch.delete.result.status", msg(if (success) "common.status.success" else "common.status.failed")))
             if (!success && errorMessage != null) {
-                appendLine("- 错误信息：$errorMessage")
+                appendLine(msg("batch.delete.result.error.message", errorMessage))
             }
             if (configSummary.isNotBlank()) {
-                appendLine("- 配置摘要：$configSummary")
+                appendLine(msg("batch.delete.result.config.summary", configSummary))
             }
             appendLine()
-            appendLine("- 调用示例：")
+            appendLine(msg("batch.delete.result.call.example.header"))
             appendLine(getCallExample())
             appendLine()
-            appendLine("- 生成的存储过程SQL：")
+            appendLine(msg("batch.delete.result.generated.sql.header"))
             appendLine("=".repeat(50))
             appendLine(generatedProcedure)
         }
@@ -79,24 +81,24 @@ data class BatchDeleteResult(
             buildString {
                 appendLine("CALL $procedureName(${config.limitSize}, ${config.minId}, '${config.createTimeEnd}');")
                 appendLine()
-                appendLine("参数说明：")
-                appendLine("- 参数1 (limitSize): ${config.limitSize} - 每次删除的行数")
-                appendLine("- 参数2 (minId): ${config.minId} - 起始主键值")
-                appendLine("- 参数3 (createTimeEnd): '${config.createTimeEnd}' - 删除截至时间")
+                appendLine(msg("batch.delete.result.call.example.parameter.header"))
+                appendLine(msg("batch.delete.result.call.example.parameter.limit", config.limitSize))
+                appendLine(msg("batch.delete.result.call.example.parameter.min.id", config.minId))
+                appendLine(msg("batch.delete.result.call.example.parameter.end.time", config.createTimeEnd))
                 if (config.customWhereCondition.isNotBlank()) {
-                    appendLine("- 自定义条件: ${config.customWhereCondition}")
+                    appendLine(msg("batch.delete.result.call.example.parameter.custom.where", config.customWhereCondition))
                 }
                 appendLine()
-                appendLine("执行说明：")
-                appendLine("- 该存储过程会循环删除 ${config.mainTableName} 表中满足条件的历史数据")
-                appendLine("- 每次删除 ${config.limitSize} 行，避免长时间锁表")
-                appendLine("- 删除条件：${config.primaryKeyField} >= ${config.minId} AND ${config.timeField} <= '${config.createTimeEnd}'")
+                appendLine(msg("batch.delete.result.call.example.execution.header"))
+                appendLine(msg("batch.delete.result.call.example.execution.delete.history", config.mainTableName))
+                appendLine(msg("batch.delete.result.call.example.execution.limit", config.limitSize))
+                appendLine(msg("batch.delete.result.call.example.execution.condition", config.primaryKeyField, config.minId, config.timeField, config.createTimeEnd))
                 if (config.customWhereCondition.isNotBlank()) {
-                    appendLine("- 额外条件：${config.customWhereCondition}")
+                    appendLine(msg("batch.delete.result.call.example.execution.extra.condition", config.customWhereCondition))
                 }
             }
         } else {
-            "配置信息不可用，无法生成调用示例"
+            msg("batch.delete.result.call.example.unavailable")
         }
     }
     
@@ -105,14 +107,29 @@ data class BatchDeleteResult(
      */
     fun getStatistics(): String {
         return buildString {
-            appendLine("- 批量删除存储过程统计信息：")
-            appendLine("- 存储过程名称：$procedureName")
-            appendLine("- 主表名：$mainTableName")
-            appendLine("- 生成时间：${java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(generateTime), java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}")
-            appendLine("- 状态：${if (success) "成功" else "失败"}")
+            appendLine(msg("batch.delete.result.statistics.header"))
+            appendLine(msg("batch.delete.result.procedure.name", procedureName))
+            appendLine(msg("batch.delete.result.main.table.name", mainTableName))
+            appendLine(msg("batch.delete.result.generate.time", formatTime(generateTime)))
+            appendLine(msg("batch.delete.result.status", msg(if (success) "common.status.success" else "common.status.failed")))
             if (!success && errorMessage != null) {
-                appendLine("- 错误信息：$errorMessage")
+                appendLine(msg("batch.delete.result.error.message", errorMessage))
             }
         }
     }
+
+    /**
+     * 格式化 `time`。
+     */
+    private fun formatTime(time: Long): String {
+        return java.time.LocalDateTime.ofInstant(
+            java.time.Instant.ofEpochMilli(time),
+            java.time.ZoneId.systemDefault()
+        ).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+    }
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

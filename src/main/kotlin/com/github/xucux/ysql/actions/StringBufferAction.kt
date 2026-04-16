@@ -4,6 +4,7 @@ import com.github.xucux.ysql.models.StringBufferConfig
 import com.github.xucux.ysql.services.StringBufferService
 import com.github.xucux.ysql.ui.StringBufferConfigDialog
 import com.github.xucux.ysql.ui.StringBufferResultDialog
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -16,8 +17,15 @@ import com.intellij.openapi.util.TextRange
  * StringBuffer代码生成Action
  * 主入口Action，处理用户的StringBuffer代码生成请求
  */
-class StringBufferAction : AnAction("生成StringBuffer代码", "将SQL转换为StringBuffer/StringBuilder代码", null), DumbAware {
+class StringBufferAction : AnAction(
+    I18nUtil.getMessage("action.generate.string.buffer.text"),
+    I18nUtil.getMessage("action.generate.string.buffer.description"),
+    null
+), DumbAware {
     
+    /**
+     * 执行当前动作。
+     */
     override fun actionPerformed(event: AnActionEvent) {
         val project = event.project ?: return
         val editor = event.getData(CommonDataKeys.EDITOR)
@@ -56,8 +64,8 @@ class StringBufferAction : AnAction("生成StringBuffer代码", "将SQL转换为
                         } else {
                             Messages.showErrorDialog(
                                 project,
-                                "生成StringBuffer代码失败：${result.errorMessage}",
-                                "错误"
+                                I18nUtil.getMessage("message.string.buffer.generate.failed", result.errorMessage ?: ""),
+                                I18nUtil.getMessage("dialog.title.error")
                             )
                         }
                     }
@@ -65,8 +73,8 @@ class StringBufferAction : AnAction("生成StringBuffer代码", "将SQL转换为
                     ApplicationManager.getApplication().invokeLater {
                         Messages.showErrorDialog(
                             project,
-                            "生成StringBuffer代码时发生异常：${e.message}",
-                            "异常"
+                            I18nUtil.getMessage("message.string.buffer.generate.exception", e.message ?: ""),
+                            I18nUtil.getMessage("dialog.title.exception")
                         )
                     }
                 }
@@ -74,7 +82,12 @@ class StringBufferAction : AnAction("生成StringBuffer代码", "将SQL转换为
         }
     }
     
+    /**
+     * 更新当前动作的展示状态。
+     */
     override fun update(event: AnActionEvent) {
+        event.presentation.text = I18nUtil.getMessage("action.generate.string.buffer.text")
+        event.presentation.description = I18nUtil.getMessage("action.generate.string.buffer.description")
         // 检查是否有编辑器可用
         val editor = event.getData(CommonDataKeys.EDITOR)
         event.presentation.isEnabledAndVisible = editor != null

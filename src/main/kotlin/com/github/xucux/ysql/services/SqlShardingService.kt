@@ -5,6 +5,7 @@ import com.github.xucux.ysql.models.ShardingResult
 import com.github.xucux.ysql.utils.SqlParser
 import com.github.xucux.ysql.utils.SuffixGenerator
 import com.github.xucux.ysql.utils.EncodingUtils
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.components.Service
 
 /**
@@ -12,6 +13,9 @@ import com.intellij.openapi.components.Service
  * 核心业务逻辑服务，负责分表SQL的生成
  */
 @Service
+/**
+ * 提供 `SqlShardingService` 相关业务服务。
+ */
 class SqlShardingService {
     
     /**
@@ -52,7 +56,7 @@ class SqlShardingService {
         } catch (e: Exception) {
             return ShardingResult(
                 success = false,
-                errorMessage = EncodingUtils.formatChineseText("生成分表SQL时发生错误：${e.message}")
+                errorMessage = EncodingUtils.formatChineseText(msg("message.sharding.generate.exception", e.message ?: ""))
             )
         }
     }
@@ -75,7 +79,7 @@ class SqlShardingService {
         )
         
         // 为每个后缀生成对应的SQL
-        suffixes.forEachIndexed { index, suffix ->
+        suffixes.forEach { suffix ->
             var shardingSql = config.originalSql
             
             // 替换所有表名
@@ -98,21 +102,21 @@ class SqlShardingService {
     private fun validateConfig(config: ShardingConfig): ValidationResult {
         // 检查表名列表
         if (config.tableNames.isEmpty()) {
-            return ValidationResult(false, "表名列表不能为空")
+            return ValidationResult(false, msg("validation.table.names.required"))
         }
         
         // 检查分表数量
         if (config.shardCount <= 0) {
-            return ValidationResult(false, "分表数量必须大于0")
+            return ValidationResult(false, msg("validation.shard.count.gt.zero"))
         }
         
         if (config.shardCount > 1000) {
-            return ValidationResult(false, "分表数量不能超过1000")
+            return ValidationResult(false, msg("validation.shard.count.max"))
         }
         
         // 检查原始SQL
         if (config.originalSql.isBlank()) {
-            return ValidationResult(false, "原始SQL语句不能为空")
+            return ValidationResult(false, msg("validation.original.sql.required"))
         }
         
         // 检查后缀格式
@@ -125,17 +129,17 @@ class SqlShardingService {
         if (config.suffixType == com.github.xucux.ysql.models.SuffixType.YEAR || 
             config.suffixType == com.github.xucux.ysql.models.SuffixType.YEAR_MONTH) {
             if (config.startYear < 1900 || config.startYear > 2100) {
-                return ValidationResult(false, "起始年份必须在1900-2100之间")
+                return ValidationResult(false, msg("validation.start.year.range"))
             }
         }
         
         if (config.suffixType == com.github.xucux.ysql.models.SuffixType.YEAR_MONTH) {
             if (config.startMonth < 1 || config.startMonth > 12) {
-                return ValidationResult(false, "起始月份必须在1-12之间")
+                return ValidationResult(false, msg("validation.start.month.range"))
             }
         }
         
-        return ValidationResult(true, "配置验证通过")
+        return ValidationResult(true, msg("validation.config.ok"))
     }
     
     /**
@@ -145,23 +149,23 @@ class SqlShardingService {
      */
     fun getShardingPreview(config: ShardingConfig): String {
         return buildString {
-            appendLine(EncodingUtils.formatChineseText("分表配置预览："))
-            appendLine(EncodingUtils.formatChineseText("• 表名：${config.tableNames.joinToString(", ")}"))
-            appendLine(EncodingUtils.formatChineseText("• 分表数量：${config.shardCount}"))
-            appendLine(EncodingUtils.formatChineseText("• 后缀类型：${config.suffixType.displayName}"))
-            appendLine(EncodingUtils.formatChineseText("• 后缀格式：${config.suffixFormat}"))
+            appendLine(EncodingUtils.formatChineseText(msg("sharding.preview.header")))
+            appendLine(EncodingUtils.formatChineseText(msg("sharding.preview.table.names", config.tableNames.joinToString(", "))))
+            appendLine(EncodingUtils.formatChineseText(msg("sharding.preview.shard.count", config.shardCount)))
+            appendLine(EncodingUtils.formatChineseText(msg("sharding.preview.suffix.type", config.suffixType.displayName)))
+            appendLine(EncodingUtils.formatChineseText(msg("sharding.preview.suffix.format", config.suffixFormat)))
             
             if (config.suffixType == com.github.xucux.ysql.models.SuffixType.YEAR || 
                 config.suffixType == com.github.xucux.ysql.models.SuffixType.YEAR_MONTH) {
-                appendLine(EncodingUtils.formatChineseText("• 起始年份：${config.startYear}"))
+                appendLine(EncodingUtils.formatChineseText(msg("sharding.preview.start.year", config.startYear)))
             }
             
             if (config.suffixType == com.github.xucux.ysql.models.SuffixType.YEAR_MONTH) {
-                appendLine(EncodingUtils.formatChineseText("• 起始月份：${config.startMonth}"))
+                appendLine(EncodingUtils.formatChineseText(msg("sharding.preview.start.month", config.startMonth)))
             }
             
             appendLine()
-            appendLine(EncodingUtils.formatChineseText("生成的分表名称示例："))
+            appendLine(EncodingUtils.formatChineseText(msg("sharding.preview.generated.names.header")))
             
             val suffixes = SuffixGenerator.generateSuffixList(
                 count = minOf(config.shardCount, 5), // 只显示前5个
@@ -173,12 +177,12 @@ class SqlShardingService {
             
             config.tableNames.forEach { tableName ->
                 suffixes.forEach { suffix ->
-                    appendLine(EncodingUtils.formatChineseText("  • $tableName$suffix"))
+                    appendLine(EncodingUtils.formatChineseText(msg("sharding.preview.generated.name.item", "$tableName$suffix")))
                 }
             }
             
             if (config.shardCount > 5) {
-                appendLine(EncodingUtils.formatChineseText("  • ... (还有 ${config.shardCount - 5} 个)"))
+                appendLine(EncodingUtils.formatChineseText(msg("sharding.preview.generated.name.more", config.shardCount - 5)))
             }
         }
     }
@@ -190,4 +194,9 @@ class SqlShardingService {
         val isValid: Boolean,
         val message: String
     )
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

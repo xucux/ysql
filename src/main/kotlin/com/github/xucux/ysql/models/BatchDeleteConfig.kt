@@ -1,5 +1,7 @@
 package com.github.xucux.ysql.models
 
+import com.github.xucux.ysql.utils.I18nUtil
+
 /**
  * 批量删除存储过程配置模型
  * 用于存储批量删除存储过程生成的相关配置信息
@@ -58,5 +60,5 @@ data class BatchDeleteConfig(
     /**
      * 存储过程注释
      */
-    val procedureComment: String = "批量删除历史数据存储过程"
+    val procedureComment: String = I18nUtil.getMessage("batch.delete.config.default.procedure.comment")
 )

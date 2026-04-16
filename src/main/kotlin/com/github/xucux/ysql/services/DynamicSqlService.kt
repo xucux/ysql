@@ -5,6 +5,7 @@ import com.github.xucux.ysql.models.DynamicSqlResult
 import com.github.xucux.ysql.models.SqlVariable
 import com.github.xucux.ysql.models.VariableType
 import com.github.xucux.ysql.utils.DynamicSqlGenerator
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.components.Service
 
 /**
@@ -12,6 +13,9 @@ import com.intellij.openapi.components.Service
  * 核心业务逻辑服务，负责动态SQL语句的生成
  */
 @Service
+/**
+ * 提供 `DynamicSqlService` 相关业务服务。
+ */
 class DynamicSqlService {
     
     /**
@@ -33,7 +37,7 @@ class DynamicSqlService {
         return if (result.success) {
             result.getCodePreview()
         } else {
-            "预览生成失败：${result.errorMessage}"
+            I18nUtil.getMessage("message.preview.generate.failed", result.errorMessage ?: "")
         }
     }
     

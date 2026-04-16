@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.github.xucux"
-version = "1.1.3-201"
+version = "1.2.0-201"
 
 repositories {
     // 阿里云镜像仓库 - 国内访问速度更快

@@ -42,7 +42,7 @@ object CodeGenerator {
         } catch (e: Exception) {
             return StringBufferResult(
                 success = false,
-                errorMessage = "生成代码时发生错误：${e.message}"
+                errorMessage = I18nUtil.getMessage("message.string.buffer.generate.exception", e.message ?: "")
             )
         }
     }
@@ -60,9 +60,9 @@ object CodeGenerator {
         
         // 添加注释（如果启用）
         if (config.addComments) {
-            result.appendLine("$commentSymbol 使用${config.language.bufferClass}构建SQL语句")
-            result.appendLine("$commentSymbol 变量名: ${config.variableName}")
-            result.appendLine("$commentSymbol 原始SQL: ${config.originalSql.replace("\n", " ").trim()}")
+            result.appendLine("$commentSymbol ${I18nUtil.getMessage("code.generator.comment.build.sql", config.language.bufferClass)}")
+            result.appendLine("$commentSymbol ${I18nUtil.getMessage("code.generator.comment.variable.name", config.variableName)}")
+            result.appendLine("$commentSymbol ${I18nUtil.getMessage("code.generator.comment.original.sql", config.originalSql.replace("\n", " ").trim())}")
             result.appendLine()
         }
         
@@ -97,7 +97,7 @@ object CodeGenerator {
             if (trimmedLine.isNotEmpty()) {
                 // 添加注释（如果启用）
                 if (config.addComments) {
-                    result.appendLine("$commentSymbol 添加SQL片段: $trimmedLine")
+                    result.appendLine("$commentSymbol ${I18nUtil.getMessage("code.generator.comment.add.sql.fragment", trimmedLine)}")
                 }
                 
                 // 转义字符串并添加空格
@@ -125,7 +125,7 @@ object CodeGenerator {
         
         // 添加注释（如果启用）
         if (config.addComments) {
-            result.appendLine("$commentSymbol 生成最终的SQL字符串")
+            result.appendLine("$commentSymbol ${I18nUtil.getMessage("code.generator.comment.final.sql")}")
         }
         
         // 生成最终字符串
@@ -159,19 +159,19 @@ object CodeGenerator {
     private fun validateConfig(config: StringBufferConfig): ValidationResult {
         // 检查变量名
         if (config.variableName.isBlank()) {
-            return ValidationResult(false, "变量名不能为空")
+            return ValidationResult(false, I18nUtil.getMessage("validation.variable.name.required"))
         }
         
         if (!isValidVariableName(config.variableName)) {
-            return ValidationResult(false, "变量名格式不正确，只能包含字母、数字和下划线，且不能以数字开头")
+            return ValidationResult(false, I18nUtil.getMessage("validation.variable.name.invalid"))
         }
         
         // 检查SQL语句
         if (config.originalSql.isBlank()) {
-            return ValidationResult(false, "SQL语句不能为空")
+            return ValidationResult(false, I18nUtil.getMessage("validation.sql.required"))
         }
         
-        return ValidationResult(true, "配置验证通过")
+        return ValidationResult(true, I18nUtil.getMessage("validation.config.ok"))
     }
     
     /**
@@ -216,7 +216,7 @@ object CodeGenerator {
     fun getCodeTemplate(language: CodeLanguage): String {
         return when (language) {
             CodeLanguage.JAVA -> """
-                // Java StringBuffer 示例
+                // ${I18nUtil.getMessage("code.generator.template.java.example")}
                 StringBuffer sql = new StringBuffer();
                 sql.append("SELECT * FROM users");
                 sql.append(" WHERE id = ?");
@@ -224,7 +224,7 @@ object CodeGenerator {
             """.trimIndent()
             
             CodeLanguage.CSHARP -> """
-                // C# StringBuilder 示例
+                // ${I18nUtil.getMessage("code.generator.template.csharp.example")}
                 StringBuilder sql = new StringBuilder();
                 sql.Append("SELECT * FROM users");
                 sql.Append(" WHERE id = ?");
@@ -232,7 +232,7 @@ object CodeGenerator {
             """.trimIndent()
             
             CodeLanguage.KOTLIN -> """
-                // Kotlin StringBuilder 示例
+                // ${I18nUtil.getMessage("code.generator.template.kotlin.example")}
                 val sql = StringBuilder()
                 sql.append("SELECT * FROM users")
                 sql.append(" WHERE id = ?")
@@ -240,7 +240,7 @@ object CodeGenerator {
             """.trimIndent()
             
             CodeLanguage.SCALA -> """
-                // Scala StringBuilder 示例
+                // ${I18nUtil.getMessage("code.generator.template.scala.example")}
                 val sql = new StringBuilder()
                 sql.append("SELECT * FROM users")
                 sql.append(" WHERE id = ?")
@@ -248,7 +248,7 @@ object CodeGenerator {
             """.trimIndent()
             
             CodeLanguage.GROOVY -> """
-                // Groovy StringBuilder 示例
+                // ${I18nUtil.getMessage("code.generator.template.groovy.example")}
                 def sql = new StringBuilder()
                 sql.append("SELECT * FROM users")
                 sql.append(" WHERE id = ?")

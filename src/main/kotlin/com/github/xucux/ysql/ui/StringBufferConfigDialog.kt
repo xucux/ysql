@@ -3,6 +3,7 @@ package com.github.xucux.ysql.ui
 import com.github.xucux.ysql.models.CodeLanguage
 import com.github.xucux.ysql.models.StringBufferConfig
 import com.github.xucux.ysql.services.StringBufferService
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
@@ -27,16 +28,16 @@ class StringBufferConfigDialog(
     
     private val variableNameField = JBTextField("sql")
     private val languageComboBox = ComboBox(CodeLanguage.values())
-    private val addCommentsCheckBox = JBCheckBox("添加注释", false)
-    private val formatCodeCheckBox = JBCheckBox("格式化代码", false)
+    private val addCommentsCheckBox = JBCheckBox(msg("toolwindow.checkbox.add.comments"), false)
+    private val formatCodeCheckBox = JBCheckBox(msg("toolwindow.checkbox.format.code"), false)
     private val sqlTextArea = JBTextArea(10, 50)
     
-    private val previewButton = JButton("预览代码")
+    private val previewButton = JButton(msg("dialog.string.buffer.config.preview"))
     private val previewTextArea = JBTextArea(8, 50)
-    private val templateButton = JButton("查看模板")
+    private val templateButton = JButton(msg("dialog.string.buffer.config.view.template"))
     
     init {
-        title = "StringBuffer代码生成配置"
+        title = msg("dialog.string.buffer.config.title")
         init()
         
         // 设置初始值
@@ -53,6 +54,9 @@ class StringBufferConfigDialog(
         setupEventListeners()
     }
     
+    /**
+     * 设置 `upEventListeners`。
+     */
     private fun setupEventListeners() {
         // 预览代码按钮
         previewButton.addActionListener {
@@ -74,12 +78,24 @@ class StringBufferConfigDialog(
         addCommentsCheckBox.addActionListener { showPreview() }
         formatCodeCheckBox.addActionListener { showPreview() }
         sqlTextArea.document.addDocumentListener(object : javax.swing.event.DocumentListener {
+            /**
+             * 处理 `insertUpdate` 逻辑。
+             */
             override fun insertUpdate(e: javax.swing.event.DocumentEvent?) { showPreview() }
+            /**
+             * 移除 `update`。
+             */
             override fun removeUpdate(e: javax.swing.event.DocumentEvent?) { showPreview() }
+            /**
+             * 处理 `changedUpdate` 逻辑。
+             */
             override fun changedUpdate(e: javax.swing.event.DocumentEvent?) { showPreview() }
         })
     }
     
+    /**
+     * 展示 `preview`。
+     */
     private fun showPreview() {
         val config = getConfig()
         try {
@@ -87,10 +103,13 @@ class StringBufferConfigDialog(
             val preview = stringBufferService.getCodePreview(config)
             previewTextArea.text = preview
         } catch (e: Exception) {
-            previewTextArea.text = "预览生成失败：${e.message}"
+            previewTextArea.text = msg("message.preview.generate.failed", e.message ?: "")
         }
     }
     
+    /**
+     * 展示 `template`。
+     */
     private fun showTemplate() {
         val selectedLanguage = languageComboBox.selectedItem as CodeLanguage
         try {
@@ -99,10 +118,13 @@ class StringBufferConfigDialog(
             
             val templateDialog = object : DialogWrapper(project) {
                 init {
-                    title = "${selectedLanguage.displayName} 代码模板"
+                    title = msg("dialog.string.buffer.config.code.template.title", selectedLanguage.displayName)
                     init()
                 }
                 
+                /**
+                 * 创建对话框主体面板。
+                 */
                 override fun createCenterPanel(): JComponent {
                     val textArea = JBTextArea(15, 60)
                     textArea.text = template
@@ -114,6 +136,9 @@ class StringBufferConfigDialog(
                     return JBScrollPane(textArea)
                 }
                 
+                /**
+                 * 创建当前对话框的操作列表。
+                 */
                 override fun createActions(): Array<Action> {
                     return arrayOf(cancelAction)
                 }
@@ -123,26 +148,29 @@ class StringBufferConfigDialog(
         } catch (e: Exception) {
             JOptionPane.showMessageDialog(
                 this.contentPanel,
-                "获取模板失败：${e.message}",
-                "错误",
+                msg("message.template.get.failed", e.message ?: ""),
+                msg("dialog.title.error"),
                 JOptionPane.ERROR_MESSAGE
             )
         }
     }
     
+    /**
+     * 创建对话框主体面板。
+     */
     override fun createCenterPanel(): JComponent {
         val mainPanel = JPanel(BorderLayout())
         
         // 创建配置面板
         val configPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("变量名称:", variableNameField)
-            .addLabeledComponent("编程语言:", languageComboBox)
+            .addLabeledComponent(msg("toolwindow.label.variable.name"), variableNameField)
+            .addLabeledComponent(msg("toolwindow.label.programming.language"), languageComboBox)
             .addComponent(addCommentsCheckBox)
             .addComponent(formatCodeCheckBox)
             .addSeparator()
-            .addLabeledComponent("原始SQL:", JBScrollPane(sqlTextArea))
+            .addLabeledComponent(msg("toolwindow.label.original.sql"), JBScrollPane(sqlTextArea))
             .addComponent(previewButton)
-            .addLabeledComponent("代码预览:", JBScrollPane(previewTextArea))
+            .addLabeledComponent(msg("dialog.string.buffer.config.code.preview"), JBScrollPane(previewTextArea))
             .addComponent(templateButton)
             .panel
         
@@ -154,10 +182,16 @@ class StringBufferConfigDialog(
         return mainPanel
     }
     
+    /**
+     * 创建当前对话框的操作列表。
+     */
     override fun createActions(): Array<Action> {
         return arrayOf(okAction, cancelAction)
     }
     
+    /**
+     * 处理 `doOKAction` 逻辑。
+     */
     override fun doOKAction() {
         // 验证配置
         val config = getConfig()
@@ -168,7 +202,7 @@ class StringBufferConfigDialog(
             JOptionPane.showMessageDialog(
                 this.contentPanel,
                 validationResult.message,
-                "配置错误",
+                msg("dialog.title.config.error"),
                 JOptionPane.ERROR_MESSAGE
             )
             return
@@ -177,6 +211,9 @@ class StringBufferConfigDialog(
         super.doOKAction()
     }
     
+    /**
+     * 获取 `config`。
+     */
     fun getConfig(): StringBufferConfig {
         return StringBufferConfig(
             variableName = variableNameField.text,
@@ -186,4 +223,9 @@ class StringBufferConfigDialog(
             formatCode = formatCodeCheckBox.isSelected
         )
     }
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

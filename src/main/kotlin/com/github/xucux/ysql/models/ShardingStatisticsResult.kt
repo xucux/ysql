@@ -1,5 +1,7 @@
 package com.github.xucux.ysql.models
 
+import com.github.xucux.ysql.utils.I18nUtil
+
 /**
  * 分表统计结果模型
  * 用于存储分表统计SQL生成的结果
@@ -37,15 +39,15 @@ data class ShardingStatisticsResult(
      */
     fun getFormattedResult(): String {
         if (!success) {
-            return "生成分表统计SQL失败：$errorMessage"
+            return I18nUtil.getMessage("sharding.statistics.result.failed", errorMessage)
         }
         
         val sb = StringBuilder()
-        sb.append("=== 分表统计SQL生成结果 ===\n")
-        sb.append("分表数量: $shardCount\n")
-        sb.append("涉及表名: ${tableNames.joinToString(", ")}\n")
-        sb.append("生成时间: ${java.time.LocalDateTime.now()}\n")
-        sb.append("\n=== 统计SQL ===\n")
+        sb.append(I18nUtil.getMessage("sharding.statistics.result.header")).append('\n')
+        sb.append(I18nUtil.getMessage("sharding.statistics.result.shard.count", shardCount)).append('\n')
+        sb.append(I18nUtil.getMessage("sharding.statistics.result.table.names", tableNames.joinToString(", "))).append('\n')
+        sb.append(I18nUtil.getMessage("sharding.statistics.result.generate.time", java.time.LocalDateTime.now())).append('\n')
+        sb.append('\n').append(I18nUtil.getMessage("sharding.statistics.result.sql.header")).append('\n')
         sb.append(statisticsSql)
         
         return sb.toString()

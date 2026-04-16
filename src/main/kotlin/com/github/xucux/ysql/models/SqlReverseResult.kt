@@ -1,5 +1,7 @@
 package com.github.xucux.ysql.models
 
+import com.github.xucux.ysql.utils.I18nUtil
+
 /**
  * SQL反向解析结果模型
  * 用于存储从StringBuffer/StringBuilder代码中解析出的SQL语句信息
@@ -40,14 +42,14 @@ data class SqlReverseResult(
      */
     fun getStatistics(): String {
         return buildString {
-            appendLine("// SQL反向解析统计：")
-            appendLine("// 编程语言：${language.displayName}")
-            appendLine("// SQL片段数量：${sqlStatements.size}")
-            appendLine("// 总字符数：${extractedSql.length}")
-            appendLine("// 解析时间：${java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(parseTime), java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}")
-            appendLine("// 状态：${if (success) "成功" else "失败"}")
+            appendLine(msg("sql.reverse.result.statistics.header"))
+            appendLine(msg("sql.reverse.result.statistics.language", language.displayName))
+            appendLine(msg("sql.reverse.result.statistics.fragment.count", sqlStatements.size))
+            appendLine(msg("sql.reverse.result.statistics.char.count", extractedSql.length))
+            appendLine(msg("sql.reverse.result.statistics.parse.time", formatTime(parseTime)))
+            appendLine(msg("sql.reverse.result.statistics.status", msg(if (success) "common.status.success" else "common.status.failed")))
             if (!success && errorMessage != null) {
-                appendLine("// 错误信息：$errorMessage")
+                appendLine(msg("sql.reverse.result.statistics.error.message", errorMessage))
             }
         }
     }
@@ -60,12 +62,12 @@ data class SqlReverseResult(
         val previewLines = lines.take(5)
         
         return buildString {
-            appendLine("-- 提取的SQL语句预览：")
+            appendLine(msg("sql.reverse.result.preview.header"))
             previewLines.forEach { line ->
                 appendLine(line)
             }
             if (lines.size > 5) {
-                appendLine("-- ... (还有 ${lines.size - 5} 行)")
+                appendLine(msg("sql.reverse.result.preview.more.lines", lines.size - 5))
             }
         }
     }
@@ -75,14 +77,14 @@ data class SqlReverseResult(
      */
     fun getFormattedResult(): String {
         return buildString {
-            appendLine("-- 状态：${if (success) "成功" else "失败"}")
-            appendLine("-- 提取的SQL语句：")
+            appendLine(msg("sql.reverse.result.formatted.status", msg(if (success) "common.status.success" else "common.status.failed")))
+            appendLine(msg("sql.reverse.result.formatted.extracted.sql"))
             appendLine(extractedSql)
             if (sqlStatements.size > 1) {
                 appendLine()
-                appendLine("-- SQL片段详情：")
+                appendLine(msg("sql.reverse.result.formatted.fragments.header"))
                 sqlStatements.forEachIndexed { index, fragment ->
-                    appendLine("-- 片段 ${index + 1}: $fragment")
+                    appendLine(msg("sql.reverse.result.formatted.fragment.item", index + 1, fragment))
                 }
             }
         }
@@ -93,9 +95,9 @@ data class SqlReverseResult(
      */
     fun getSqlFragmentsDetail(): String {
         return buildString {
-            appendLine("-- SQL语句片段详情：")
+            appendLine(msg("sql.reverse.result.fragments.detail.header"))
             sqlStatements.forEachIndexed { index, fragment ->
-                appendLine("-- 片段 ${index + 1}: \"$fragment\"")
+                appendLine(msg("sql.reverse.result.fragments.detail.item", index + 1, fragment))
             }
         }
     }
@@ -123,4 +125,19 @@ data class SqlReverseResult(
             else -> "UNKNOWN"
         }
     }
+
+    /**
+     * 格式化 `time`。
+     */
+    private fun formatTime(time: Long): String {
+        return java.time.LocalDateTime.ofInstant(
+            java.time.Instant.ofEpochMilli(time),
+            java.time.ZoneId.systemDefault()
+        ).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+    }
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

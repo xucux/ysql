@@ -1,5 +1,7 @@
 package com.github.xucux.ysql.models
 
+import com.github.xucux.ysql.utils.I18nUtil
+
 /**
  * 动态语句结果模型
  * 用于存储动态SQL语句生成的结果信息
@@ -50,19 +52,19 @@ data class DynamicSqlResult(
      */
     fun getFormattedResult(): String {
         if (!success) {
-            return "生成失败：${errorMessage ?: "未知错误"}"
+            return msg("dynamic.sql.result.generate.failed", errorMessage ?: msg("common.unknown.error"))
         }
         
         val result = StringBuilder()
-        result.appendLine("-- 动态SQL语句生成结果")
-        result.appendLine("-- 生成时间: ${java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(generateTime), java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}")
-        result.appendLine("-- 配置摘要: $configSummary")
+        result.appendLine(msg("dynamic.sql.result.header"))
+        result.appendLine(msg("dynamic.sql.result.generate.time", formatTime(generateTime)))
+        result.appendLine(msg("dynamic.sql.result.config.summary", configSummary))
         result.appendLine()
         
         if (extractedVariables.isNotEmpty()) {
-            result.appendLine("-- 提取的变量信息:")
+            result.appendLine(msg("dynamic.sql.result.variables.header"))
             extractedVariables.forEach { variable ->
-                result.appendLine("-- 变量名: ${variable.name}, 值: ${variable.value}, 类型: ${variable.type}")
+                result.appendLine(msg("dynamic.sql.result.variable.item", variable.name, variable.value, variable.type.displayName))
             }
             result.appendLine()
         }
@@ -77,11 +79,26 @@ data class DynamicSqlResult(
      */
     fun getCodePreview(): String {
         if (!success) {
-            return "预览生成失败：${errorMessage ?: "未知错误"}"
+            return msg("dynamic.sql.result.preview.failed", errorMessage ?: msg("common.unknown.error"))
         }
         
         return generatedDynamicSql
     }
+
+    /**
+     * 格式化 `time`。
+     */
+    private fun formatTime(time: Long): String {
+        return java.time.LocalDateTime.ofInstant(
+            java.time.Instant.ofEpochMilli(time),
+            java.time.ZoneId.systemDefault()
+        ).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+    }
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }
 
 /**
@@ -112,10 +129,18 @@ data class SqlVariable(
 /**
  * 变量类型枚举
  */
-enum class VariableType(val displayName: String) {
-    STRING("字符串"),
-    NUMBER("数字"),
-    BOOLEAN("布尔值"),
-    DATE("日期"),
-    UNKNOWN("未知")
+enum class VariableType(private val displayNameKey: String) {
+    STRING("variable.type.string"),
+    NUMBER("variable.type.number"),
+    BOOLEAN("variable.type.boolean"),
+    DATE("variable.type.date"),
+    UNKNOWN("variable.type.unknown");
+
+    val displayName: String
+        get() = I18nUtil.getMessage(displayNameKey)
+
+    /**
+     * 返回当前对象的显示文本。
+     */
+    override fun toString(): String = displayName
 }

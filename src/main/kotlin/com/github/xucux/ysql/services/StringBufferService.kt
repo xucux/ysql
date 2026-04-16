@@ -5,6 +5,7 @@ import com.github.xucux.ysql.models.SqlReverseResult
 import com.github.xucux.ysql.models.StringBufferConfig
 import com.github.xucux.ysql.models.StringBufferResult
 import com.github.xucux.ysql.utils.CodeGenerator
+import com.github.xucux.ysql.utils.I18nUtil
 import com.github.xucux.ysql.utils.SqlReverseParser
 import com.intellij.openapi.components.Service
 
@@ -13,6 +14,9 @@ import com.intellij.openapi.components.Service
  * 核心业务逻辑服务，负责StringBuffer代码的生成
  */
 @Service
+/**
+ * 提供 `StringBufferService` 相关业务服务。
+ */
 class StringBufferService {
     
     /**
@@ -34,7 +38,7 @@ class StringBufferService {
         return if (result.success) {
             result.getCodePreview()
         } else {
-            "预览生成失败：${result.errorMessage}"
+            msg("message.preview.generate.failed", result.errorMessage ?: "")
         }
     }
     
@@ -89,14 +93,14 @@ class StringBufferService {
         val totalChars = config.originalSql.length
         
         return buildString {
-            appendLine("配置统计信息：")
-            appendLine("• 编程语言：${config.language.displayName}")
-            appendLine("• 变量名称：${config.variableName}")
-            appendLine("• SQL行数：${sqlLines.size}")
-            appendLine("• 非空行数：$nonEmptyLines")
-            appendLine("• 字符数量：$totalChars")
-            appendLine("• 添加注释：${if (config.addComments) "是" else "否"}")
-            appendLine("• 格式化代码：${if (config.formatCode) "是" else "否"}")
+            appendLine(msg("string.buffer.service.config.statistics.header"))
+            appendLine(msg("string.buffer.service.config.statistics.language", config.language.displayName))
+            appendLine(msg("string.buffer.service.config.statistics.variable.name", config.variableName))
+            appendLine(msg("string.buffer.service.config.statistics.sql.lines", sqlLines.size))
+            appendLine(msg("string.buffer.service.config.statistics.non.empty.lines", nonEmptyLines))
+            appendLine(msg("string.buffer.service.config.statistics.char.count", totalChars))
+            appendLine(msg("string.buffer.service.config.statistics.add.comments", msg(if (config.addComments) "common.yes" else "common.no")))
+            appendLine(msg("string.buffer.service.config.statistics.format.code", msg(if (config.formatCode) "common.yes" else "common.no")))
         }
     }
     
@@ -108,24 +112,24 @@ class StringBufferService {
     fun validateConfig(config: StringBufferConfig): ValidationResult {
         // 检查变量名
         if (config.variableName.isBlank()) {
-            return ValidationResult(false, "变量名不能为空")
+            return ValidationResult(false, msg("validation.variable.name.required"))
         }
         
         if (!isValidVariableName(config.variableName)) {
-            return ValidationResult(false, "变量名格式不正确，只能包含字母、数字和下划线，且不能以数字开头")
+            return ValidationResult(false, msg("validation.variable.name.invalid"))
         }
         
         // 检查SQL语句
         if (config.originalSql.isBlank()) {
-            return ValidationResult(false, "SQL语句不能为空")
+            return ValidationResult(false, msg("validation.sql.required"))
         }
         
         // 检查SQL语句长度
         if (config.originalSql.length > 10000) {
-            return ValidationResult(false, "SQL语句过长，请控制在10000字符以内")
+            return ValidationResult(false, msg("validation.sql.too.long"))
         }
         
-        return ValidationResult(true, "配置验证通过")
+        return ValidationResult(true, msg("validation.config.ok"))
     }
     
     /**
@@ -179,22 +183,23 @@ class StringBufferService {
         
         // 变量名建议
         if (config.variableName.length < 3) {
-            suggestions.add("建议使用更具描述性的变量名，如 'sqlBuilder' 或 'queryBuilder'")
+            suggestions.add(msg("string.buffer.suggestion.variable.name"))
+            
         }
         
         // SQL长度建议
         val sqlLines = config.originalSql.split("\n")
         if (sqlLines.size > 20) {
-            suggestions.add("SQL语句较长，建议考虑拆分为多个方法或使用配置文件")
+            suggestions.add(msg("string.buffer.suggestion.long.sql"))
         }
         
         // 语言特定建议
         when (config.language) {
             com.github.xucux.ysql.models.CodeLanguage.KOTLIN -> {
-                suggestions.add("Kotlin中建议使用 'val' 关键字声明不可变变量")
+                suggestions.add(msg("string.buffer.suggestion.kotlin.val"))
             }
             com.github.xucux.ysql.models.CodeLanguage.CSHARP -> {
-                suggestions.add("C#中建议使用 'var' 关键字进行类型推断")
+                suggestions.add(msg("string.buffer.suggestion.csharp.var"))
             }
             else -> {
                 // 其他语言暂无特殊建议
@@ -228,12 +233,12 @@ class StringBufferService {
         
         // 检查StringBuffer声明
         if (!code.contains("StringBuffer") && !code.contains("StringBuilder")) {
-            errors.add("缺少StringBuffer或StringBuilder声明")
+            errors.add(msg("string.buffer.syntax.java.missing.builder"))
         }
         
         // 检查new关键字
         if (!code.contains("new ")) {
-            errors.add("Java中缺少new关键字")
+            errors.add(msg("string.buffer.syntax.java.missing.new"))
         }
         
         // 检查分号
@@ -243,15 +248,15 @@ class StringBufferService {
             if (trimmed.contains("StringBuffer") || trimmed.contains("StringBuilder") || 
                 trimmed.contains("append") || trimmed.contains("String final")) {
                 if (!trimmed.endsWith(";")) {
-                    errors.add("Java语句缺少分号: $trimmed")
+                    errors.add(msg("string.buffer.syntax.java.missing.semicolon", trimmed))
                 }
             }
         }
         
         return if (errors.isEmpty()) {
-            ValidationResult(true, "Java语法验证通过")
+            ValidationResult(true, msg("string.buffer.syntax.java.ok"))
         } else {
-            ValidationResult(false, "Java语法错误: ${errors.joinToString(", ")}")
+            ValidationResult(false, msg("string.buffer.syntax.java.error", errors.joinToString(", ")))
         }
     }
     
@@ -263,23 +268,23 @@ class StringBufferService {
         
         // 检查StringBuilder声明
         if (!code.contains("StringBuilder")) {
-            errors.add("缺少StringBuilder声明")
+            errors.add(msg("string.buffer.syntax.csharp.missing.builder"))
         }
         
         // 检查Append方法（大写A）
         if (code.contains(".append(")) {
-            errors.add("C#中应该使用Append而不是append")
+            errors.add(msg("string.buffer.syntax.csharp.use.append"))
         }
         
         // 检查string类型（小写s）
         if (code.contains("String final")) {
-            errors.add("C#中应该使用string而不是String")
+            errors.add(msg("string.buffer.syntax.csharp.use.string"))
         }
         
         return if (errors.isEmpty()) {
-            ValidationResult(true, "C#语法验证通过")
+            ValidationResult(true, msg("string.buffer.syntax.csharp.ok"))
         } else {
-            ValidationResult(false, "C#语法错误: ${errors.joinToString(", ")}")
+            ValidationResult(false, msg("string.buffer.syntax.csharp.error", errors.joinToString(", ")))
         }
     }
     
@@ -291,23 +296,23 @@ class StringBufferService {
         
         // 检查val关键字
         if (!code.contains("val ")) {
-            errors.add("Kotlin中缺少val关键字")
+            errors.add(msg("string.buffer.syntax.kotlin.missing.val"))
         }
         
         // 检查不应该有new关键字
         if (code.contains("new ")) {
-            errors.add("Kotlin中不应该使用new关键字")
+            errors.add(msg("string.buffer.syntax.kotlin.no.new"))
         }
         
         // 检查不应该有分号
         if (code.contains(";")) {
-            errors.add("Kotlin中通常不使用分号")
+            errors.add(msg("string.buffer.syntax.kotlin.no.semicolon"))
         }
         
         return if (errors.isEmpty()) {
-            ValidationResult(true, "Kotlin语法验证通过")
+            ValidationResult(true, msg("string.buffer.syntax.kotlin.ok"))
         } else {
-            ValidationResult(false, "Kotlin语法错误: ${errors.joinToString(", ")}")
+            ValidationResult(false, msg("string.buffer.syntax.kotlin.error", errors.joinToString(", ")))
         }
     }
     
@@ -319,18 +324,18 @@ class StringBufferService {
         
         // 检查val关键字
         if (!code.contains("val ")) {
-            errors.add("Scala中缺少val关键字")
+            errors.add(msg("string.buffer.syntax.scala.missing.val"))
         }
         
         // 检查new关键字
         if (!code.contains("new ")) {
-            errors.add("Scala中需要new关键字")
+            errors.add(msg("string.buffer.syntax.scala.need.new"))
         }
         
         return if (errors.isEmpty()) {
-            ValidationResult(true, "Scala语法验证通过")
+            ValidationResult(true, msg("string.buffer.syntax.scala.ok"))
         } else {
-            ValidationResult(false, "Scala语法错误: ${errors.joinToString(", ")}")
+            ValidationResult(false, msg("string.buffer.syntax.scala.error", errors.joinToString(", ")))
         }
     }
     
@@ -342,13 +347,13 @@ class StringBufferService {
         
         // 检查def关键字
         if (!code.contains("def ")) {
-            errors.add("Groovy中缺少def关键字")
+            errors.add(msg("string.buffer.syntax.groovy.missing.def"))
         }
         
         return if (errors.isEmpty()) {
-            ValidationResult(true, "Groovy语法验证通过")
+            ValidationResult(true, msg("string.buffer.syntax.groovy.ok"))
         } else {
-            ValidationResult(false, "Groovy语法错误: ${errors.joinToString(", ")}")
+            ValidationResult(false, msg("string.buffer.syntax.groovy.error", errors.joinToString(", ")))
         }
     }
     
@@ -359,4 +364,9 @@ class StringBufferService {
         val isValid: Boolean,
         val message: String
     )
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

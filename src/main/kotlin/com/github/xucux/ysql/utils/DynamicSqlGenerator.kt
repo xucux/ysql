@@ -51,7 +51,7 @@ object DynamicSqlGenerator {
             if (config.originalSql.isBlank()) {
                 return DynamicSqlResult(
                     success = false,
-                    errorMessage = "原始SQL语句不能为空"
+                    errorMessage = I18nUtil.getMessage("validation.original.sql.required")
                 )
             }
             
@@ -59,7 +59,7 @@ object DynamicSqlGenerator {
             if (!validateSingleSqlStatement(config.originalSql)) {
                 return DynamicSqlResult(
                     success = false,
-                    errorMessage = "仅支持单条SQL语句，不支持多条语句"
+                    errorMessage = I18nUtil.getMessage("dynamic.sql.validation.single.statement.only")
                 )
             }
             
@@ -69,7 +69,7 @@ object DynamicSqlGenerator {
             if (extractedVariables.isEmpty()) {
                 return DynamicSqlResult(
                     success = false,
-                    errorMessage = "未找到需要动态化的变量，请检查SQL语句"
+                    errorMessage = I18nUtil.getMessage("dynamic.sql.validation.no.variables")
                 )
             }
             
@@ -91,7 +91,7 @@ object DynamicSqlGenerator {
         } catch (e: Exception) {
             return DynamicSqlResult(
                 success = false,
-                errorMessage = "生成动态SQL时发生错误：${e.message}"
+                errorMessage = I18nUtil.getMessage("message.dynamic.sql.generate.exception", e.message ?: "")
             )
         }
     }
@@ -142,7 +142,7 @@ object DynamicSqlGenerator {
             val position = equalsMatcher.start()
             
             if (!isInsideInCondition(sql, position)) {
-                val variableName = generateVariableNameFromField(fieldName, value)
+                val variableName = generateVariableNameFromField(fieldName)
                 if (!ignoredSet.contains(variableName.lowercase()) && !isIgnoredField(fieldName)) {
                     val cleanValue = value.removeSurrounding("'", "'").removeSurrounding("\"", "\"")
                     val variableType = determineVariableType(cleanValue, fieldName)
@@ -166,8 +166,8 @@ object DynamicSqlGenerator {
             val position = rangeMatcher.start()
             
             if (!ignoredSet.contains("${fieldName}_start".lowercase()) && !isIgnoredField(fieldName)) {
-                val startVariableName = generateVariableNameFromField(fieldName, startValue, "_start")
-                val endVariableName = generateVariableNameFromField(fieldName, endValue, "_end")
+                val startVariableName = generateVariableNameFromField(fieldName, "_start")
+                val endVariableName = generateVariableNameFromField(fieldName, "_end")
                 
                 val cleanStartValue = startValue.removeSurrounding("'", "'").removeSurrounding("\"", "\"")
                 val cleanEndValue = endValue.removeSurrounding("'", "'").removeSurrounding("\"", "\"")
@@ -244,7 +244,7 @@ object DynamicSqlGenerator {
             val value = rightExpression.value
             
             if (!isIgnoredField(fieldName)) {
-                val variableName = generateVariableNameFromField(fieldName, value)
+                val variableName = generateVariableNameFromField(fieldName)
                 if (!ignoredSet.contains(variableName.lowercase())) {
                     val variableType = determineVariableType(value, fieldName)
                     variables.add(SqlVariable(
@@ -260,7 +260,7 @@ object DynamicSqlGenerator {
             val value = rightExpression.value.toString()
             
             if (!isIgnoredField(fieldName)) {
-                val variableName = generateVariableNameFromField(fieldName, value)
+                val variableName = generateVariableNameFromField(fieldName)
                 if (!ignoredSet.contains(variableName.lowercase())) {
                     variables.add(SqlVariable(
                         name = variableName,
@@ -296,7 +296,7 @@ object DynamicSqlGenerator {
             }
             
             if (!isIgnoredField(fieldName)) {
-                val variableName = generateVariableNameFromField(fieldName, value, suffix)
+                val variableName = generateVariableNameFromField(fieldName, suffix)
                 if (!ignoredSet.contains(variableName.lowercase())) {
                     val variableType = determineVariableType(value, fieldName)
                     variables.add(SqlVariable(
@@ -320,7 +320,7 @@ object DynamicSqlGenerator {
         val result = StringBuilder()
         
         // 生成变量设置部分
-        result.appendLine("-- 设置变量")
+        result.appendLine(I18nUtil.getMessage("dynamic.sql.generator.section.set.variables"))
         variables.forEach { variable ->
             val value = when (variable.type) {
                 VariableType.STRING, VariableType.DATE -> "\"${variable.value}\""
@@ -337,7 +337,7 @@ object DynamicSqlGenerator {
         
         // 生成SQL语句部分
         val sqlVariableName = "${config.sqlVariablePrefix}_${java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("MMddHHmm"))}"
-        result.appendLine("-- sql语句")
+        result.appendLine(I18nUtil.getMessage("dynamic.sql.generator.section.sql"))
         result.append("SET @$sqlVariableName = CONCAT(\"")
         result.appendLine()
         
@@ -350,7 +350,7 @@ object DynamicSqlGenerator {
         
         // 生成执行部分
         val statementName = "${config.statementVariablePrefix}_${java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("MMddHHmm"))}"
-        result.appendLine("-- 执行sql")
+        result.appendLine(I18nUtil.getMessage("dynamic.sql.generator.section.execute.sql"))
         result.appendLine("PREPARE $statementName FROM @$sqlVariableName;")
         result.appendLine("EXECUTE $statementName;")
         result.appendLine("DEALLOCATE PREPARE $statementName;")
@@ -417,6 +417,9 @@ object DynamicSqlGenerator {
         return pattern.matcher(sql).replaceAll(newValue)
     }
 
+    /**
+     * 替换 `exactValueByStr`。
+     */
     private fun replaceExactValueByStr(sql: String, oldValue: String, newValue: String): String {
         return sql.replace(oldValue, newValue);
     }
@@ -465,11 +468,10 @@ object DynamicSqlGenerator {
     /**
      * 根据字段名生成变量名
      * @param fieldName 字段名
-     * @param value 变量值
      * @param suffix 后缀（可选）
      * @return 变量名
      */
-    private fun generateVariableNameFromField(fieldName: String, value: String, suffix: String = ""): String {
+    private fun generateVariableNameFromField(fieldName: String, suffix: String = ""): String {
         // 提取字段名，去除表别名前缀
         val actualFieldName = if (fieldName.contains(".")) {
             fieldName.substringAfterLast(".")
@@ -544,8 +546,6 @@ object DynamicSqlGenerator {
      */
     private fun isInsideInCondition(sql: String, position: Int): Boolean {
         val beforePosition = sql.substring(0, position).lowercase()
-        val afterPosition = sql.substring(position).lowercase()
-        
         // 查找最近的IN关键字
         val inIndex = beforePosition.lastIndexOf(" in ")
         if (inIndex == -1) return false
@@ -659,14 +659,14 @@ object DynamicSqlGenerator {
      */
     private fun buildConfigSummary(config: DynamicSqlConfig, variables: List<SqlVariable>): String {
         val summary = StringBuilder()
-        summary.append("提取变量${variables.size}个")
+        summary.append(I18nUtil.getMessage("dynamic.sql.generator.summary.variables", variables.size))
         
         if (config.enableShardingSuffix) {
-            summary.append("，启用分片后缀")
+            summary.append(I18nUtil.getMessage("dynamic.sql.generator.summary.enable.sharding"))
         }
         
         if (config.ignoredVariables.isNotEmpty()) {
-            summary.append("，忽略变量${config.ignoredVariables.size}个")
+            summary.append(I18nUtil.getMessage("dynamic.sql.generator.summary.ignored.variables", config.ignoredVariables.size))
         }
         
         return summary.toString()

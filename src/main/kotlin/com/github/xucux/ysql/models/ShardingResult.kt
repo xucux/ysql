@@ -1,5 +1,7 @@
 package com.github.xucux.ysql.models
 
+import com.github.xucux.ysql.utils.I18nUtil
+
 /**
  * 分表结果模型
  * 用于存储分表SQL生成的结果信息
@@ -47,13 +49,13 @@ data class ShardingResult(
      */
     fun getStatistics(): String {
         return buildString {
-            appendLine("- 分表统计信息：")
-            appendLine("- 分表数量：$shardCount")
-            appendLine("- 涉及表名：${tableNames.joinToString(", ")}")
-            appendLine("- 生成时间：${java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(generateTime), java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}")
-            appendLine("- 状态：${if (success) "成功" else "失败"}")
+            appendLine(msg("sharding.result.statistics.header"))
+            appendLine(msg("sharding.result.statistics.shard.count", shardCount))
+            appendLine(msg("sharding.result.statistics.table.names", tableNames.joinToString(", ")))
+            appendLine(msg("sharding.result.statistics.generate.time", formatTime(generateTime)))
+            appendLine(msg("sharding.result.statistics.status", msg(if (success) "common.status.success" else "common.status.failed")))
             if (!success && errorMessage != null) {
-                appendLine("- 错误信息：$errorMessage")
+                appendLine(msg("sharding.result.statistics.error.message", errorMessage))
             }
         }
     }
@@ -65,9 +67,24 @@ data class ShardingResult(
         return buildString {
             appendLine(getStatistics())
             appendLine()
-            appendLine("- 生成的分表SQL：")
+            appendLine(msg("sharding.result.formatted.generated.sql"))
             appendLine("=".repeat(50))
             appendLine(getCombinedSqls())
         }
     }
+
+    /**
+     * 格式化 `time`。
+     */
+    private fun formatTime(time: Long): String {
+        return java.time.LocalDateTime.ofInstant(
+            java.time.Instant.ofEpochMilli(time),
+            java.time.ZoneId.systemDefault()
+        ).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+    }
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

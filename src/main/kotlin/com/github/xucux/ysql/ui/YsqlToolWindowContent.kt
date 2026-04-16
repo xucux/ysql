@@ -27,6 +27,7 @@ import com.github.xucux.ysql.services.StringBufferService
 import com.github.xucux.ysql.services.TableNameExtractorService
 import com.github.xucux.ysql.services.BatchDeleteService
 import com.github.xucux.ysql.services.DynamicSqlService
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.ui.Messages
@@ -57,30 +58,30 @@ class YsqlToolWindowContent(private val project: Project) {
     private val shardingStartYearField = JSpinner(SpinnerNumberModel(2020, 1900, 2100, 1))
     private val shardingStartMonthField = JSpinner(SpinnerNumberModel(1, 1, 12, 1))
     private val shardingSqlTextArea = JBTextArea(8, 40)
-    private val shardingExtractTableNamesButton = JButton("自动识别表名")
-    private val shardingGenerateButton = JButton("生成分表SQL")
-    private val shardingStatisticsButton = JButton("生成分表统计")
+    private val shardingExtractTableNamesButton = JButton(msg("toolwindow.button.extract.table.names"))
+    private val shardingGenerateButton = JButton(msg("toolwindow.button.generate.sharding.sql"))
+    private val shardingStatisticsButton = JButton(msg("toolwindow.button.generate.sharding.statistics"))
     private val shardingResultTextArea = JBTextArea(8, 40)
     
     // StringBuffer代码生成相关组件
     private val stringBufferVariableNameField = JBTextField().apply { text = "sql" }
     private val stringBufferLanguageComboBox = ComboBox(CodeLanguage.values())
-    private val stringBufferAddCommentsCheckBox = JCheckBox("添加注释", false)
-    private val stringBufferFormatCodeCheckBox = JCheckBox("格式化代码", false)
+    private val stringBufferAddCommentsCheckBox = JCheckBox(msg("toolwindow.checkbox.add.comments"), false)
+    private val stringBufferFormatCodeCheckBox = JCheckBox(msg("toolwindow.checkbox.format.code"), false)
     private val stringBufferSqlTextArea = JBTextArea(8, 40)
-    private val stringBufferGenerateButton = JButton("生成代码")
+    private val stringBufferGenerateButton = JButton(msg("toolwindow.button.generate.code"))
     private val stringBufferResultTextArea = JBTextArea(8, 40)
     
     // SQL反向解析相关组件
     private val reverseParseCodeTextArea = JBTextArea(8, 40)
     private val reverseParseLanguageComboBox = ComboBox(CodeLanguage.values())
-    private val reverseParseAutoDetectCheckBox = JCheckBox("自动检测语言", true)
-    private val reverseParseButton = JButton("反向解析SQL")
+    private val reverseParseAutoDetectCheckBox = JCheckBox(msg("toolwindow.checkbox.auto.detect.language"), true)
+    private val reverseParseButton = JButton(msg("toolwindow.button.reverse.parse.sql"))
     private val reverseParseResultTextArea = JBTextArea(8, 40)
     
     // 批量删除存储过程相关组件
     private val batchDeleteTemplateComboBox = ComboBox(BatchDeleteTemplate.values())
-    private val batchDeleteApplyTemplateButton = JButton("应用模板")
+    private val batchDeleteApplyTemplateButton = JButton(msg("toolwindow.button.apply.template"))
     private val batchDeleteProcedureNameField = JBTextField("DropHistoryDataByLimit")
     private val batchDeleteMainTableNameField = JBTextField("system_logs")
     private val batchDeletePrimaryKeyField = JBTextField("id")
@@ -88,25 +89,25 @@ class YsqlToolWindowContent(private val project: Project) {
     private val batchDeleteLimitSizeSpinner = JSpinner(SpinnerNumberModel(1000, 1, 100000, 100))
     private val batchDeleteMinIdSpinner = JSpinner(SpinnerNumberModel(0L, 0L, Long.MAX_VALUE, 1L))
     private val batchDeleteCreateTimeEndField = JBTextField("2023-01-01 00:00:00")
-    private val batchDeleteAddLogTableCheckBox = JCheckBox("添加日志表", true)
-    private val batchDeleteAddTempTableCheckBox = JCheckBox("添加临时操作表", true)
+    private val batchDeleteAddLogTableCheckBox = JCheckBox(msg("toolwindow.checkbox.add.log.table"), true)
+    private val batchDeleteAddTempTableCheckBox = JCheckBox(msg("toolwindow.checkbox.add.temp.table"), true)
     private val batchDeleteCustomWhereConditionField = JBTextField()
-    private val batchDeleteProcedureCommentField = JBTextField("循环删除历史数据-根据limit查询主键防止临时表，再联表删除")
-    private val batchDeleteGenerateButton = JButton("生成存储过程")
+    private val batchDeleteProcedureCommentField = JBTextField(msg("toolwindow.default.procedure.comment"))
+    private val batchDeleteGenerateButton = JButton(msg("toolwindow.button.generate.procedure"))
     private val batchDeleteResultTextArea = JBTextArea(8, 40)
     
     // 动态语句相关组件
     private val dynamicSqlTextArea = JBTextArea(8, 40)
     private val dynamicSqlIgnoredVariablesField = JBTextField()
     private val dynamicSqlRecognizedVariablesTextArea = JBTextArea(4, 40)
-    private val dynamicSqlRecognizeVariablesButton = JButton("识别变量")
-    private val dynamicSqlCopyToIgnoredButton = JButton("复制选中到忽略列表")
-    private val dynamicSqlEnableShardingCheckBox = JCheckBox("启用分片后缀", false)
+    private val dynamicSqlRecognizeVariablesButton = JButton(msg("toolwindow.button.recognize.variables"))
+    private val dynamicSqlCopyToIgnoredButton = JButton(msg("toolwindow.button.copy.selected.to.ignored"))
+    private val dynamicSqlEnableShardingCheckBox = JCheckBox(msg("toolwindow.checkbox.enable.sharding.suffix"), false)
     private val dynamicSqlShardingSuffixFormatField = JBTextField().apply { text = "_" }
     private val dynamicSqlShardingSuffixVariableField = JBTextField().apply { text = "sharding_suffix" }
     private val dynamicSqlVariablePrefixField = JBTextField().apply { text = "query_sql" }
     private val dynamicSqlStatementPrefixField = JBTextField().apply { text = "stmt" }
-    private val dynamicSqlGenerateButton = JButton("生成动态语句")
+    private val dynamicSqlGenerateButton = JButton(msg("toolwindow.button.generate.dynamic.sql"))
     private val dynamicSqlResultTextArea = JBTextArea(8, 40)
     
     init {
@@ -114,6 +115,9 @@ class YsqlToolWindowContent(private val project: Project) {
         setupEventListeners()
     }
     
+    /**
+     * 设置 `upUI`。
+     */
     private fun setupUI() {
         // 设置文本区域属性
         setupTextAreas()
@@ -135,9 +139,9 @@ class YsqlToolWindowContent(private val project: Project) {
         
         // 添加标签页
 //        tabbedPane.addTab("分表SQL解析",  shardingPanel)
-        tabbedPane.addTab("代码包裹",  stringBufferPanel)
-        tabbedPane.addTab("代码清除",  reverseParsePanel)
-        tabbedPane.addTab("动态语句",  dynamicSqlPanel)
+        tabbedPane.addTab(msg("toolwindow.inner.tab.string.buffer"),  stringBufferPanel)
+        tabbedPane.addTab(msg("toolwindow.inner.tab.reverse.parse"),  reverseParsePanel)
+        tabbedPane.addTab(msg("toolwindow.inner.tab.dynamic.sql"),  dynamicSqlPanel)
 //        tabbedPane.addTab("批量删除存储过程",batchDeletePanel)
         
         // 设置主面板
@@ -145,6 +149,9 @@ class YsqlToolWindowContent(private val project: Project) {
         stingBufferPanel.preferredSize = Dimension(800, 600)
     }
     
+    /**
+     * 设置 `upTextAreas`。
+     */
     private fun setupTextAreas() {
         // 分表SQL相关文本区域
         shardingSqlTextArea.lineWrap = true
@@ -183,19 +190,22 @@ class YsqlToolWindowContent(private val project: Project) {
         dynamicSqlResultTextArea.wrapStyleWord = true
     }
     
+    /**
+     * 创建 `shardingPanel`。
+     */
     private fun createShardingPanel(): JPanel {
         val panel = JPanel(BorderLayout())
         
         // 创建配置面板
         val configPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("表名列表:", shardingTableNamesField)
+            .addLabeledComponent(msg("toolwindow.label.table.names"), shardingTableNamesField)
             .addComponent(shardingExtractTableNamesButton)
             .addSeparator()
-            .addLabeledComponent("后缀类型:", shardingSuffixTypeComboBox)
-            .addLabeledComponent("后缀格式:", shardingSuffixFormatField)
-            .addLabeledComponent("分表数量:", shardingShardCountField)
-            .addLabeledComponent("起始年份:", shardingStartYearField)
-            .addLabeledComponent("起始月份:", shardingStartMonthField)
+            .addLabeledComponent(msg("toolwindow.label.suffix.type"), shardingSuffixTypeComboBox)
+            .addLabeledComponent(msg("toolwindow.label.suffix.format"), shardingSuffixFormatField)
+            .addLabeledComponent(msg("toolwindow.label.shard.count"), shardingShardCountField)
+            .addLabeledComponent(msg("toolwindow.label.start.year"), shardingStartYearField)
+            .addLabeledComponent(msg("toolwindow.label.start.month"), shardingStartMonthField)
             .panel
         
         // 创建按钮面板
@@ -205,9 +215,9 @@ class YsqlToolWindowContent(private val project: Project) {
         
         // 创建SQL输入面板
         val sqlInputPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("原始SQL:", JBScrollPane(shardingSqlTextArea))
+            .addLabeledComponent(msg("toolwindow.label.original.sql"), JBScrollPane(shardingSqlTextArea))
             .addComponent(buttonPanel)
-            .addLabeledComponent("生成结果:", JBScrollPane(shardingResultTextArea))
+            .addLabeledComponent(msg("toolwindow.label.generated.result"), JBScrollPane(shardingResultTextArea))
             .panel
         
         // 创建分割面板
@@ -219,22 +229,25 @@ class YsqlToolWindowContent(private val project: Project) {
         return panel
     }
     
+    /**
+     * 创建 `stringBufferPanel`。
+     */
     private fun createStringBufferPanel(): JPanel {
         val panel = JPanel(BorderLayout())
         
         // 创建配置面板
         val configPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("变量名称:", stringBufferVariableNameField)
-            .addLabeledComponent("编程语言:", stringBufferLanguageComboBox)
+            .addLabeledComponent(msg("toolwindow.label.variable.name"), stringBufferVariableNameField)
+            .addLabeledComponent(msg("toolwindow.label.programming.language"), stringBufferLanguageComboBox)
             .addComponent(stringBufferAddCommentsCheckBox)
             .addComponent(stringBufferFormatCodeCheckBox)
             .panel
         
         // 创建代码生成面板
         val codePanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("原始SQL:", JBScrollPane(stringBufferSqlTextArea))
+            .addLabeledComponent(msg("toolwindow.label.original.sql"), JBScrollPane(stringBufferSqlTextArea))
             .addComponent(stringBufferGenerateButton)
-            .addLabeledComponent("生成结果:", JBScrollPane(stringBufferResultTextArea))
+            .addLabeledComponent(msg("toolwindow.label.generated.result"), JBScrollPane(stringBufferResultTextArea))
             .panel
         
         // 创建分割面板
@@ -246,20 +259,23 @@ class YsqlToolWindowContent(private val project: Project) {
         return panel
     }
     
+    /**
+     * 创建 `reverseParsePanel`。
+     */
     private fun createReverseParsePanel(): JPanel {
         val panel = JPanel(BorderLayout())
         
         // 创建配置面板
         val configPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("编程语言:", reverseParseLanguageComboBox)
+            .addLabeledComponent(msg("toolwindow.label.programming.language"), reverseParseLanguageComboBox)
             .addComponent(reverseParseAutoDetectCheckBox)
             .panel
         
         // 创建反向解析面板
         val parsePanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("代码:", JBScrollPane(reverseParseCodeTextArea))
+            .addLabeledComponent(msg("toolwindow.label.code"), JBScrollPane(reverseParseCodeTextArea))
             .addComponent(reverseParseButton)
-            .addLabeledComponent("解析结果:", JBScrollPane(reverseParseResultTextArea))
+            .addLabeledComponent(msg("toolwindow.label.parse.result"), JBScrollPane(reverseParseResultTextArea))
             .panel
         
         // 创建分割面板
@@ -271,51 +287,54 @@ class YsqlToolWindowContent(private val project: Project) {
         return panel
     }
     
+    /**
+     * 创建 `batchDeletePanel`。
+     */
     private fun createBatchDeletePanel(): JPanel {
         val panel = JPanel(BorderLayout())
         
         // 创建模板选择面板
         val templatePanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("选择模板:", batchDeleteTemplateComboBox)
+            .addLabeledComponent(msg("toolwindow.label.select.template"), batchDeleteTemplateComboBox)
             .addComponent(batchDeleteApplyTemplateButton)
             .panel
         
         // 创建基础配置面板
         val basicConfigPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("存储过程名称:", batchDeleteProcedureNameField)
-            .addLabeledComponent("主表名:", batchDeleteMainTableNameField)
-            .addLabeledComponent("主键字段名:", batchDeletePrimaryKeyField)
-            .addLabeledComponent("时间字段名:", batchDeleteTimeField)
+            .addLabeledComponent(msg("toolwindow.label.procedure.name"), batchDeleteProcedureNameField)
+            .addLabeledComponent(msg("toolwindow.label.main.table.name"), batchDeleteMainTableNameField)
+            .addLabeledComponent(msg("toolwindow.label.primary.key.field"), batchDeletePrimaryKeyField)
+            .addLabeledComponent(msg("toolwindow.label.time.field"), batchDeleteTimeField)
             .panel
         
         // 创建参数配置面板
         val paramConfigPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("每次删除行数:", batchDeleteLimitSizeSpinner)
-            .addLabeledComponent("起始主键值:", batchDeleteMinIdSpinner)
-            .addLabeledComponent("删除截至时间:", batchDeleteCreateTimeEndField)
+            .addLabeledComponent(msg("toolwindow.label.delete.limit"), batchDeleteLimitSizeSpinner)
+            .addLabeledComponent(msg("toolwindow.label.min.id"), batchDeleteMinIdSpinner)
+            .addLabeledComponent(msg("toolwindow.label.delete.end.time"), batchDeleteCreateTimeEndField)
             .panel
         
         // 创建高级配置面板
         val advancedConfigPanel = FormBuilder.createFormBuilder()
             .addComponent(batchDeleteAddLogTableCheckBox)
             .addComponent(batchDeleteAddTempTableCheckBox)
-            .addLabeledComponent("自定义WHERE条件:", batchDeleteCustomWhereConditionField)
-            .addLabeledComponent("存储过程注释:", batchDeleteProcedureCommentField)
+            .addLabeledComponent(msg("toolwindow.label.custom.where"), batchDeleteCustomWhereConditionField)
+            .addLabeledComponent(msg("toolwindow.label.procedure.comment"), batchDeleteProcedureCommentField)
             .panel
         
         // 创建配置面板（左侧）
         val configPanel = JPanel(BorderLayout())
         val configTabbedPane = JBTabbedPane()
-        configTabbedPane.addTab("模板选择", templatePanel)
-        configTabbedPane.addTab("基础配置", basicConfigPanel)
-        configTabbedPane.addTab("参数配置", paramConfigPanel)
-        configTabbedPane.addTab("高级配置", advancedConfigPanel)
+        configTabbedPane.addTab(msg("toolwindow.tab.template"), templatePanel)
+        configTabbedPane.addTab(msg("toolwindow.tab.basic.config"), basicConfigPanel)
+        configTabbedPane.addTab(msg("toolwindow.tab.param.config"), paramConfigPanel)
+        configTabbedPane.addTab(msg("toolwindow.tab.advanced.config"), advancedConfigPanel)
         configPanel.add(configTabbedPane, BorderLayout.CENTER)
         
         // 创建生成面板（右侧）
         val generatePanel = FormBuilder.createFormBuilder()
             .addComponent(batchDeleteGenerateButton)
-            .addLabeledComponent("生成结果:", JBScrollPane(batchDeleteResultTextArea))
+            .addLabeledComponent(msg("toolwindow.label.generated.result"), JBScrollPane(batchDeleteResultTextArea))
             .panel
         
         // 创建分割面板
@@ -327,15 +346,18 @@ class YsqlToolWindowContent(private val project: Project) {
         return panel
     }
     
+    /**
+     * 创建 `dynamicSqlPanel`。
+     */
     private fun createDynamicSqlPanel(): JPanel {
         val panel = JPanel(BorderLayout())
         
         // 创建基础配置面板
         val basicConfigPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("忽略变量:", dynamicSqlIgnoredVariablesField)
-            .addComponent(JBLabel("(多个变量用逗号分隔，默认忽略: delete_status,is_delete,is_deleted,deleted)"))
+            .addLabeledComponent(msg("toolwindow.label.ignored.variables"), dynamicSqlIgnoredVariablesField)
+            .addComponent(JBLabel(msg("toolwindow.hint.ignored.variables")))
             .addSeparator()
-            .addLabeledComponent("识别变量:", JBScrollPane(dynamicSqlRecognizedVariablesTextArea))
+            .addLabeledComponent(msg("toolwindow.label.recognized.variables"), JBScrollPane(dynamicSqlRecognizedVariablesTextArea))
             .addComponent(dynamicSqlRecognizeVariablesButton)
             .addComponent(dynamicSqlCopyToIgnoredButton)
             .panel
@@ -343,29 +365,29 @@ class YsqlToolWindowContent(private val project: Project) {
         // 创建分片配置面板
         val shardingConfigPanel = FormBuilder.createFormBuilder()
             .addComponent(dynamicSqlEnableShardingCheckBox)
-            .addLabeledComponent("分片后缀格式:", dynamicSqlShardingSuffixFormatField)
-            .addLabeledComponent("分片后缀变量名:", dynamicSqlShardingSuffixVariableField)
+            .addLabeledComponent(msg("toolwindow.label.sharding.suffix.format"), dynamicSqlShardingSuffixFormatField)
+            .addLabeledComponent(msg("toolwindow.label.sharding.suffix.variable"), dynamicSqlShardingSuffixVariableField)
             .panel
         
         // 创建变量配置面板
         val variableConfigPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("SQL变量前缀:", dynamicSqlVariablePrefixField)
-            .addLabeledComponent("语句变量前缀:", dynamicSqlStatementPrefixField)
+            .addLabeledComponent(msg("toolwindow.label.sql.variable.prefix"), dynamicSqlVariablePrefixField)
+            .addLabeledComponent(msg("toolwindow.label.statement.variable.prefix"), dynamicSqlStatementPrefixField)
             .panel
         
         // 创建配置面板（左侧）
         val configPanel = JPanel(BorderLayout())
         val configTabbedPane = JBTabbedPane()
-        configTabbedPane.addTab("基础配置", basicConfigPanel)
-        configTabbedPane.addTab("分片配置", shardingConfigPanel)
-        configTabbedPane.addTab("变量配置", variableConfigPanel)
+        configTabbedPane.addTab(msg("toolwindow.tab.basic.config"), basicConfigPanel)
+        configTabbedPane.addTab(msg("toolwindow.tab.sharding.config"), shardingConfigPanel)
+        configTabbedPane.addTab(msg("toolwindow.tab.variable.config"), variableConfigPanel)
         configPanel.add(configTabbedPane, BorderLayout.CENTER)
         
         // 创建生成面板（右侧）
         val generatePanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("原始SQL:", JBScrollPane(dynamicSqlTextArea))
+            .addLabeledComponent(msg("toolwindow.label.original.sql"), JBScrollPane(dynamicSqlTextArea))
             .addComponent(dynamicSqlGenerateButton)
-            .addLabeledComponent("生成结果:", JBScrollPane(dynamicSqlResultTextArea))
+            .addLabeledComponent(msg("toolwindow.label.generated.result"), JBScrollPane(dynamicSqlResultTextArea))
             .panel
         
         // 创建分割面板
@@ -377,6 +399,9 @@ class YsqlToolWindowContent(private val project: Project) {
         return panel
     }
     
+    /**
+     * 设置 `upEventListeners`。
+     */
     private fun setupEventListeners() {
         // 分表SQL解析事件监听器
         setupShardingEventListeners()
@@ -394,6 +419,9 @@ class YsqlToolWindowContent(private val project: Project) {
         setupDynamicSqlEventListeners()
     }
     
+    /**
+     * 设置 `upShardingEventListeners`。
+     */
     private fun setupShardingEventListeners() {
         // 自动识别表名按钮
         shardingExtractTableNamesButton.addActionListener {
@@ -420,6 +448,9 @@ class YsqlToolWindowContent(private val project: Project) {
         updateShardingFieldVisibility()
     }
     
+    /**
+     * 设置 `upStringBufferEventListeners`。
+     */
     private fun setupStringBufferEventListeners() {
         
         // 生成代码按钮
@@ -428,6 +459,9 @@ class YsqlToolWindowContent(private val project: Project) {
         }
     }
     
+    /**
+     * 设置 `upReverseParseEventListeners`。
+     */
     private fun setupReverseParseEventListeners() {
         // 反向解析按钮
         reverseParseButton.addActionListener {
@@ -443,6 +477,9 @@ class YsqlToolWindowContent(private val project: Project) {
         reverseParseLanguageComboBox.isEnabled = !reverseParseAutoDetectCheckBox.isSelected
     }
     
+    /**
+     * 设置 `upBatchDeleteEventListeners`。
+     */
     private fun setupBatchDeleteEventListeners() {
         // 应用模板按钮
         batchDeleteApplyTemplateButton.addActionListener {
@@ -460,6 +497,9 @@ class YsqlToolWindowContent(private val project: Project) {
         }
     }
     
+    /**
+     * 设置 `upDynamicSqlEventListeners`。
+     */
     private fun setupDynamicSqlEventListeners() {
         // 生成动态语句按钮
         dynamicSqlGenerateButton.addActionListener {
@@ -485,10 +525,13 @@ class YsqlToolWindowContent(private val project: Project) {
         updateDynamicSqlFieldVisibility()
     }
     
+    /**
+     * 提取 `tableNames`。
+     */
     private fun extractTableNames() {
         val sql = shardingSqlTextArea.text.trim()
         if (sql.isBlank()) {
-            Messages.showInfoMessage("请先输入SQL语句", "提示")
+            Messages.showInfoMessage(msg("message.input.sql.required"), msg("dialog.title.info"))
             return
         }
         
@@ -498,22 +541,31 @@ class YsqlToolWindowContent(private val project: Project) {
             
             if (result.success) {
                 shardingTableNamesField.text = result.tableNames.joinToString(", ")
-                Messages.showInfoMessage("成功识别到表名：${result.tableNames.joinToString(", ")}", "成功")
+                Messages.showInfoMessage(
+                    msg("message.table.names.recognized.success", result.tableNames.joinToString(", ")),
+                    msg("dialog.title.success")
+                )
             } else {
-                Messages.showErrorDialog("识别表名失败：${result.errorMessage}", "错误")
+                Messages.showErrorDialog(
+                    msg("message.table.names.recognized.failed", result.errorMessage ?: ""),
+                    msg("dialog.title.error")
+                )
             }
         } catch (e: Exception) {
-            Messages.showErrorDialog("识别表名时发生异常：${e.message}", "异常")
+            Messages.showErrorDialog(msg("message.table.names.recognized.exception", e.message ?: ""), msg("dialog.title.exception"))
         }
     }
     
     
+    /**
+     * 生成 `shardingSql`。
+     */
     private fun generateShardingSql() {
         val config = getShardingConfig()
         val validationResult = validateShardingConfig(config)
         
         if (!validationResult.isValid) {
-            Messages.showErrorDialog(validationResult.message, "配置错误")
+            Messages.showErrorDialog(validationResult.message, msg("dialog.title.config.error"))
             return
         }
         
@@ -528,17 +580,20 @@ class YsqlToolWindowContent(private val project: Project) {
                     if (result.success) {
                         shardingResultTextArea.text = result.getFormattedResult()
                     } else {
-                        Messages.showErrorDialog("生成分表SQL失败：${result.errorMessage}", "错误")
+                        Messages.showErrorDialog(msg("message.sharding.generate.failed", result.errorMessage ?: ""), msg("dialog.title.error"))
                     }
                 }
             } catch (e: Exception) {
                 ApplicationManager.getApplication().invokeLater {
-                    Messages.showErrorDialog("生成分表SQL时发生异常：${e.message}", "异常")
+                    Messages.showErrorDialog(msg("message.sharding.generate.exception", e.message ?: ""), msg("dialog.title.exception"))
                 }
             }
         }
     }
     
+    /**
+     * 生成 `shardingStatistics`。
+     */
     private fun generateShardingStatistics() {
         // 获取当前配置
         val currentConfig = getShardingConfig()
@@ -546,7 +601,7 @@ class YsqlToolWindowContent(private val project: Project) {
         // 验证基础配置
         val validationResult = validateShardingConfig(currentConfig)
         if (!validationResult.isValid) {
-            Messages.showErrorDialog(validationResult.message, "配置错误")
+            Messages.showErrorDialog(validationResult.message, msg("dialog.title.config.error"))
             return
         }
         
@@ -566,24 +621,27 @@ class YsqlToolWindowContent(private val project: Project) {
                         if (result.success) {
                             shardingResultTextArea.text = result.getFormattedResult()
                         } else {
-                            Messages.showErrorDialog("生成分表统计SQL失败：${result.errorMessage}", "错误")
+                            Messages.showErrorDialog(msg("message.sharding.statistics.generate.failed", result.errorMessage), msg("dialog.title.error"))
                         }
                     }
                 } catch (e: Exception) {
                     ApplicationManager.getApplication().invokeLater {
-                        Messages.showErrorDialog("生成分表统计SQL时发生异常：${e.message}", "异常")
+                        Messages.showErrorDialog(msg("message.sharding.statistics.generate.exception", e.message ?: ""), msg("dialog.title.exception"))
                     }
                 }
             }
         }
     }
     
+    /**
+     * 生成 `stringBufferCode`。
+     */
     private fun generateStringBufferCode() {
         val config = getStringBufferConfig()
         val validationResult = validateStringBufferConfig(config)
         
         if (!validationResult.isValid) {
-            Messages.showErrorDialog(validationResult.message, "配置错误")
+            Messages.showErrorDialog(validationResult.message, msg("dialog.title.config.error"))
             return
         }
         
@@ -598,21 +656,24 @@ class YsqlToolWindowContent(private val project: Project) {
                     if (result.success) {
                         stringBufferResultTextArea.text = result.getFormattedResult()
                     } else {
-                        Messages.showErrorDialog("生成StringBuffer代码失败：${result.errorMessage}", "错误")
+                        Messages.showErrorDialog(msg("message.string.buffer.generate.failed", result.errorMessage ?: ""), msg("dialog.title.error"))
                     }
                 }
             } catch (e: Exception) {
                 ApplicationManager.getApplication().invokeLater {
-                    Messages.showErrorDialog("生成StringBuffer代码时发生异常：${e.message}", "异常")
+                    Messages.showErrorDialog(msg("message.string.buffer.generate.exception", e.message ?: ""), msg("dialog.title.exception"))
                 }
             }
         }
     }
     
+    /**
+     * 处理 `reverseParseSql` 逻辑。
+     */
     private fun reverseParseSql() {
         val code = reverseParseCodeTextArea.text.trim()
         if (code.isBlank()) {
-            Messages.showInfoMessage("请先输入StringBuffer/StringBuilder代码", "提示")
+            Messages.showInfoMessage(msg("message.input.string.buffer.code.required"), msg("dialog.title.info"))
             return
         }
         
@@ -620,8 +681,8 @@ class YsqlToolWindowContent(private val project: Project) {
         val stringBufferService = ApplicationManager.getApplication().getService(StringBufferService::class.java)
         if (!stringBufferService.containsStringBuffer(code)) {
             Messages.showWarningDialog(
-                "输入的代码中未找到StringBuffer或StringBuilder语句，请检查代码格式。",
-                "警告"
+                msg("message.reverse.parse.no.buffer.input"),
+                msg("dialog.title.warning")
             )
             return
         }
@@ -642,17 +703,20 @@ class YsqlToolWindowContent(private val project: Project) {
                     if (result.success) {
                         reverseParseResultTextArea.text = result.getFormattedResult()
                     } else {
-                        Messages.showErrorDialog("反向解析SQL失败：${result.errorMessage}", "错误")
+                        Messages.showErrorDialog(msg("message.reverse.parse.failed", result.errorMessage ?: ""), msg("dialog.title.error"))
                     }
                 }
             } catch (e: Exception) {
                 ApplicationManager.getApplication().invokeLater {
-                    Messages.showErrorDialog("反向解析SQL时发生异常：${e.message}", "异常")
+                    Messages.showErrorDialog(msg("message.reverse.parse.exception", e.message ?: ""), msg("dialog.title.exception"))
                 }
             }
         }
     }
     
+    /**
+     * 处理 `applyBatchDeleteTemplate` 逻辑。
+     */
     private fun applyBatchDeleteTemplate() {
         val selectedTemplate = batchDeleteTemplateComboBox.selectedItem as BatchDeleteTemplate
         val templateConfig = selectedTemplate.config
@@ -670,9 +734,12 @@ class YsqlToolWindowContent(private val project: Project) {
         batchDeleteCustomWhereConditionField.text = templateConfig.customWhereCondition
         batchDeleteProcedureCommentField.text = templateConfig.procedureComment
         
-        Messages.showInfoMessage("模板配置已应用，请根据需要调整参数", "模板应用成功")
+        Messages.showInfoMessage(msg("message.template.applied"), msg("dialog.title.template.applied"))
     }
     
+    /**
+     * 处理 `autoGenerateBatchDeleteProcedureName` 逻辑。
+     */
     private fun autoGenerateBatchDeleteProcedureName() {
         val tableName = batchDeleteMainTableNameField.text.trim()
         if (tableName.isNotBlank() && batchDeleteProcedureNameField.text == "DropHistoryDataByLimit") {
@@ -686,12 +753,15 @@ class YsqlToolWindowContent(private val project: Project) {
         }
     }
     
+    /**
+     * 生成 `batchDeleteProcedure`。
+     */
     private fun generateBatchDeleteProcedure() {
         val config = getBatchDeleteConfig()
         val validationResult = validateBatchDeleteConfig(config)
         
         if (!validationResult.isValid) {
-            Messages.showErrorDialog(validationResult.message, "配置错误")
+            Messages.showErrorDialog(validationResult.message, msg("dialog.title.config.error"))
             return
         }
         
@@ -706,23 +776,26 @@ class YsqlToolWindowContent(private val project: Project) {
                     if (result.success) {
                         batchDeleteResultTextArea.text = result.getFormattedResult()
                     } else {
-                        Messages.showErrorDialog("生成批量删除存储过程失败：${result.errorMessage}", "错误")
+                        Messages.showErrorDialog(msg("message.batch.delete.generate.failed", result.errorMessage ?: ""), msg("dialog.title.error"))
                     }
                 }
             } catch (e: Exception) {
                 ApplicationManager.getApplication().invokeLater {
-                    Messages.showErrorDialog("生成批量删除存储过程时发生异常：${e.message}", "异常")
+                    Messages.showErrorDialog(msg("message.batch.delete.generate.exception", e.message ?: ""), msg("dialog.title.exception"))
                 }
             }
         }
     }
     
+    /**
+     * 生成 `dynamicSql`。
+     */
     private fun generateDynamicSql() {
         val config = getDynamicSqlConfig()
         val validationResult = validateDynamicSqlConfig(config)
         
         if (!validationResult.isValid) {
-            Messages.showErrorDialog(validationResult.message, "配置错误")
+            Messages.showErrorDialog(validationResult.message, msg("dialog.title.config.error"))
             return
         }
         
@@ -737,17 +810,20 @@ class YsqlToolWindowContent(private val project: Project) {
                     if (result.success) {
                         dynamicSqlResultTextArea.text = result.getFormattedResult()
                     } else {
-                        Messages.showErrorDialog("生成动态SQL失败：${result.errorMessage}", "错误")
+                        Messages.showErrorDialog(msg("message.dynamic.sql.generate.failed", result.errorMessage ?: ""), msg("dialog.title.error"))
                     }
                 }
             } catch (e: Exception) {
                 ApplicationManager.getApplication().invokeLater {
-                    Messages.showErrorDialog("生成动态SQL时发生异常：${e.message}", "异常")
+                    Messages.showErrorDialog(msg("message.dynamic.sql.generate.exception", e.message ?: ""), msg("dialog.title.exception"))
                 }
             }
         }
     }
     
+    /**
+     * 更新 `dynamicSqlFieldVisibility`。
+     */
     private fun updateDynamicSqlFieldVisibility() {
         val enableSharding = dynamicSqlEnableShardingCheckBox.isSelected
         
@@ -756,10 +832,13 @@ class YsqlToolWindowContent(private val project: Project) {
         dynamicSqlShardingSuffixVariableField.isVisible = enableSharding
     }
     
+    /**
+     * 处理 `recognizeVariables` 逻辑。
+     */
     private fun recognizeVariables() {
         val sql = dynamicSqlTextArea.text.trim()
         if (sql.isBlank()) {
-            Messages.showInfoMessage("请先输入SQL语句", "提示")
+            Messages.showInfoMessage(msg("message.input.sql.required"), msg("dialog.title.info"))
             return
         }
         
@@ -772,29 +851,32 @@ class YsqlToolWindowContent(private val project: Project) {
             val variables = dynamicSqlService.extractVariablesFromSql(sql, ignoredVariables)
             
             if (variables.isEmpty()) {
-                dynamicSqlRecognizedVariablesTextArea.text = "未识别到任何变量"
-                Messages.showInfoMessage("未识别到任何变量", "提示")
+                dynamicSqlRecognizedVariablesTextArea.text = msg("message.variable.none.found")
+                Messages.showInfoMessage(msg("message.variable.none.found"), msg("dialog.title.info"))
             } else {
                 val variableText = buildVariableDisplayText(variables)
                 dynamicSqlRecognizedVariablesTextArea.text = variableText
-                Messages.showInfoMessage("成功识别到 ${variables.size} 个变量", "成功")
+                Messages.showInfoMessage(msg("message.variable.recognized.success", variables.size), msg("dialog.title.success"))
             }
         } catch (e: Exception) {
-            Messages.showErrorDialog("识别变量时发生异常：${e.message}", "异常")
+            Messages.showErrorDialog(msg("message.variable.recognized.exception", e.message ?: ""), msg("dialog.title.exception"))
         }
     }
     
+    /**
+     * 复制 `selectedToIgnored`。
+     */
     private fun copySelectedToIgnored() {
         val selectedText = dynamicSqlRecognizedVariablesTextArea.selectedText
         if (selectedText.isNullOrBlank()) {
-            Messages.showInfoMessage("请先在识别变量区域选择要忽略的变量", "提示")
+            Messages.showInfoMessage(msg("message.variable.select.to.ignore"), msg("dialog.title.info"))
             return
         }
         
         // 解析选中的文本，提取变量名
         val selectedVariables = extractVariableNamesFromText(selectedText)
         if (selectedVariables.isEmpty()) {
-            Messages.showInfoMessage("未找到有效的变量名", "提示")
+            Messages.showInfoMessage(msg("message.variable.invalid.name"), msg("dialog.title.info"))
             return
         }
         
@@ -810,34 +892,40 @@ class YsqlToolWindowContent(private val project: Project) {
         // 更新忽略变量字段
         dynamicSqlIgnoredVariablesField.text = currentIgnored.joinToString(", ")
         
-        Messages.showInfoMessage("已添加 ${selectedVariables.size} 个变量到忽略列表", "成功")
+        Messages.showInfoMessage(msg("message.variable.added.to.ignore", selectedVariables.size), msg("dialog.title.success"))
     }
     
+    /**
+     * 构建 `variableDisplayText`。
+     */
     private fun buildVariableDisplayText(variables: List<com.github.xucux.ysql.models.SqlVariable>): String {
         val result = StringBuilder()
-        result.appendLine("识别到的变量 (${variables.size}个):")
+        result.appendLine(msg("message.variable.recognized.header", variables.size))
         result.appendLine()
         
         variables.forEachIndexed { index, variable ->
-            result.appendLine("${index + 1}. 变量名: ${variable.name}")
-            result.appendLine("   值: ${variable.value}")
-            result.appendLine("   类型: ${variable.type.displayName}")
-            result.appendLine("   位置: ${variable.position}")
+            result.appendLine(msg("message.variable.item.name", index + 1, variable.name))
+            result.appendLine(msg("message.variable.item.value", variable.value))
+            result.appendLine(msg("message.variable.item.type", variable.type.displayName))
+            result.appendLine(msg("message.variable.item.position", variable.position))
             result.appendLine()
         }
         
-        result.appendLine("提示: 选择要忽略的变量名，然后点击'复制选中到忽略列表'按钮")
+        result.appendLine(msg("message.variable.ignore.hint"))
         
         return result.toString()
     }
     
+    /**
+     * 提取 `variableNamesFromText`。
+     */
     private fun extractVariableNamesFromText(text: String): List<String> {
         val variableNames = mutableListOf<String>()
         val lines = text.split("\n")
         
         for (line in lines) {
             // 匹配 "变量名: xxx" 格式
-            val match = Regex("变量名:\\s*(\\w+)").find(line)
+            val match = Regex(msg("regex.variable.name.extract")).find(line)
             if (match != null) {
                 variableNames.add(match.groupValues[1])
             }
@@ -846,6 +934,9 @@ class YsqlToolWindowContent(private val project: Project) {
         return variableNames.distinct()
     }
     
+    /**
+     * 获取 `batchDeleteConfig`。
+     */
     private fun getBatchDeleteConfig(): BatchDeleteConfig {
         return BatchDeleteConfig(
             procedureName = batchDeleteProcedureNameField.text,
@@ -862,34 +953,40 @@ class YsqlToolWindowContent(private val project: Project) {
         )
     }
     
+    /**
+     * 校验 `batchDeleteConfig`。
+     */
     private fun validateBatchDeleteConfig(config: BatchDeleteConfig): ValidationResult {
         if (config.procedureName.isBlank()) {
-            return ValidationResult(false, "存储过程名称不能为空")
+            return ValidationResult(false, msg("validation.procedure.name.required"))
         }
         
         if (config.mainTableName.isBlank()) {
-            return ValidationResult(false, "主表名不能为空")
+            return ValidationResult(false, msg("validation.main.table.name.required"))
         }
         
         if (config.primaryKeyField.isBlank()) {
-            return ValidationResult(false, "主键字段名不能为空")
+            return ValidationResult(false, msg("validation.primary.key.field.required"))
         }
         
         if (config.timeField.isBlank()) {
-            return ValidationResult(false, "时间字段名不能为空")
+            return ValidationResult(false, msg("validation.time.field.required"))
         }
         
         if (config.limitSize <= 0) {
-            return ValidationResult(false, "每次删除行数必须大于0")
+            return ValidationResult(false, msg("validation.delete.limit.gt.zero"))
         }
         
         if (config.createTimeEnd.isBlank()) {
-            return ValidationResult(false, "删除截至时间不能为空")
+            return ValidationResult(false, msg("validation.delete.end.time.required"))
         }
         
-        return ValidationResult(true, "配置验证通过")
+        return ValidationResult(true, msg("validation.config.ok"))
     }
     
+    /**
+     * 获取 `dynamicSqlConfig`。
+     */
     private fun getDynamicSqlConfig(): DynamicSqlConfig {
         val ignoredVariables = dynamicSqlIgnoredVariablesField.text.split(",")
             .map { it.trim() }
@@ -906,32 +1003,38 @@ class YsqlToolWindowContent(private val project: Project) {
         )
     }
     
+    /**
+     * 校验 `dynamicSqlConfig`。
+     */
     private fun validateDynamicSqlConfig(config: DynamicSqlConfig): ValidationResult {
         if (config.originalSql.isBlank()) {
-            return ValidationResult(false, "原始SQL语句不能为空")
+            return ValidationResult(false, msg("validation.original.sql.required"))
         }
         
         if (config.sqlVariablePrefix.isBlank()) {
-            return ValidationResult(false, "SQL变量前缀不能为空")
+            return ValidationResult(false, msg("validation.sql.variable.prefix.required"))
         }
         
         if (config.statementVariablePrefix.isBlank()) {
-            return ValidationResult(false, "语句变量前缀不能为空")
+            return ValidationResult(false, msg("validation.statement.variable.prefix.required"))
         }
         
         if (config.enableShardingSuffix) {
             if (config.shardingSuffixFormat.isBlank()) {
-                return ValidationResult(false, "分片后缀格式不能为空")
+                return ValidationResult(false, msg("validation.sharding.suffix.format.required"))
             }
             
             if (config.shardingSuffixVariableName.isBlank()) {
-                return ValidationResult(false, "分片后缀变量名不能为空")
+                return ValidationResult(false, msg("validation.sharding.suffix.variable.required"))
             }
         }
         
-        return ValidationResult(true, "配置验证通过")
+        return ValidationResult(true, msg("validation.config.ok"))
     }
     
+    /**
+     * 更新 `shardingFieldVisibility`。
+     */
     private fun updateShardingFieldVisibility() {
         val suffixType = shardingSuffixTypeComboBox.selectedItem as SuffixType
         
@@ -952,6 +1055,9 @@ class YsqlToolWindowContent(private val project: Project) {
         }
     }
     
+    /**
+     * 获取 `shardingConfig`。
+     */
     private fun getShardingConfig(): ShardingConfig {
         val tableNames = shardingTableNamesField.text.split(",")
             .map { it.trim() }
@@ -968,6 +1074,9 @@ class YsqlToolWindowContent(private val project: Project) {
         )
     }
     
+    /**
+     * 获取 `stringBufferConfig`。
+     */
     private fun getStringBufferConfig(): StringBufferConfig {
         return StringBufferConfig(
             variableName = stringBufferVariableNameField.text,
@@ -978,51 +1087,77 @@ class YsqlToolWindowContent(private val project: Project) {
         )
     }
     
+    /**
+     * 校验 `shardingConfig`。
+     */
     private fun validateShardingConfig(config: ShardingConfig): ValidationResult {
         if (config.tableNames.isEmpty()) {
-            return ValidationResult(false, "表名列表不能为空")
+            return ValidationResult(false, msg("validation.table.names.required"))
         }
         
         if (config.shardCount <= 0) {
-            return ValidationResult(false, "分表数量必须大于0")
+            return ValidationResult(false, msg("validation.shard.count.gt.zero"))
         }
         
         if (config.originalSql.isBlank()) {
-            return ValidationResult(false, "原始SQL语句不能为空")
+            return ValidationResult(false, msg("validation.original.sql.required"))
         }
         
-        return ValidationResult(true, "配置验证通过")
+        return ValidationResult(true, msg("validation.config.ok"))
     }
     
+    /**
+     * 校验 `stringBufferConfig`。
+     */
     private fun validateStringBufferConfig(config: StringBufferConfig): ValidationResult {
         if (config.variableName.isBlank()) {
-            return ValidationResult(false, "变量名称不能为空")
+            return ValidationResult(false, msg("validation.variable.name.required"))
         }
         
         if (config.originalSql.isBlank()) {
-            return ValidationResult(false, "原始SQL语句不能为空")
+            return ValidationResult(false, msg("validation.original.sql.required"))
         }
         
-        return ValidationResult(true, "配置验证通过")
+        return ValidationResult(true, msg("validation.config.ok"))
     }
     
+    /**
+     * 获取 `stringBufferPanel`。
+     */
     fun getStringBufferPanel(): JComponent {
-        return stingBufferPanel!!
+        return stingBufferPanel
     }
+    /**
+     * 获取 `shardingPanel`。
+     */
     fun getShardingPanel() : JPanel {
         return shardingPanel!!
     }
 
+    /**
+     * 获取 `batchDeletePanel`。
+     */
     fun getBatchDeletePanel() : JPanel {
         return batchDeletePanel!!
     }
     
+    /**
+     * 获取 `dynamicSqlPanel`。
+     */
     fun getDynamicSqlPanel() : JPanel {
         return dynamicSqlPanel!!
     }
     
+    /**
+     * 表示 `ValidationResult` 的结果数据。
+     */
     private data class ValidationResult(
         val isValid: Boolean,
         val message: String
     )
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

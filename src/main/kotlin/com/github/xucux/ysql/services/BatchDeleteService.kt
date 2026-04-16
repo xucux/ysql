@@ -3,6 +3,7 @@ package com.github.xucux.ysql.services
 import com.github.xucux.ysql.models.BatchDeleteConfig
 import com.github.xucux.ysql.models.BatchDeleteResult
 import com.github.xucux.ysql.utils.BatchDeleteGenerator
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.components.Service
 
 /**
@@ -10,6 +11,9 @@ import com.intellij.openapi.components.Service
  * 核心业务逻辑服务，负责批量删除存储过程的生成
  */
 @Service
+/**
+ * 提供 `BatchDeleteService` 相关业务服务。
+ */
 class BatchDeleteService {
     
     /**
@@ -28,21 +32,21 @@ class BatchDeleteService {
      */
     fun validateProcedureName(procedureName: String): ValidationResult {
         if (procedureName.isBlank()) {
-            return ValidationResult(false, "存储过程名称不能为空")
+            return ValidationResult(false, msg("validation.procedure.name.required"))
         }
         
         // 检查是否包含非法字符
         val invalidChars = procedureName.filter { !it.isLetterOrDigit() && it != '_' }
         if (invalidChars.isNotEmpty()) {
-            return ValidationResult(false, "存储过程名称包含非法字符：$invalidChars")
+            return ValidationResult(false, msg("validation.procedure.name.invalid.chars", invalidChars))
         }
         
         // 检查是否以数字开头
         if (procedureName.first().isDigit()) {
-            return ValidationResult(false, "存储过程名称不能以数字开头")
+            return ValidationResult(false, msg("validation.procedure.name.no.leading.digit"))
         }
         
-        return ValidationResult(true, "存储过程名称格式正确")
+        return ValidationResult(true, msg("validation.procedure.name.ok"))
     }
     
     /**
@@ -52,21 +56,21 @@ class BatchDeleteService {
      */
     fun validateTableName(tableName: String): ValidationResult {
         if (tableName.isBlank()) {
-            return ValidationResult(false, "表名不能为空")
+            return ValidationResult(false, msg("validation.table.name.required"))
         }
         
         // 检查是否包含非法字符
         val invalidChars = tableName.filter { !it.isLetterOrDigit() && it != '_' }
         if (invalidChars.isNotEmpty()) {
-            return ValidationResult(false, "表名包含非法字符：$invalidChars")
+            return ValidationResult(false, msg("validation.table.name.invalid.chars", invalidChars))
         }
         
         // 检查是否以数字开头
         if (tableName.first().isDigit()) {
-            return ValidationResult(false, "表名不能以数字开头")
+            return ValidationResult(false, msg("validation.table.name.no.leading.digit"))
         }
         
-        return ValidationResult(true, "表名格式正确")
+        return ValidationResult(true, msg("validation.table.name.ok"))
     }
     
     /**
@@ -76,21 +80,21 @@ class BatchDeleteService {
      */
     fun validateFieldName(fieldName: String): ValidationResult {
         if (fieldName.isBlank()) {
-            return ValidationResult(false, "字段名不能为空")
+            return ValidationResult(false, msg("validation.field.name.required"))
         }
         
         // 检查是否包含非法字符
         val invalidChars = fieldName.filter { !it.isLetterOrDigit() && it != '_' }
         if (invalidChars.isNotEmpty()) {
-            return ValidationResult(false, "字段名包含非法字符：$invalidChars")
+            return ValidationResult(false, msg("validation.field.name.invalid.chars", invalidChars))
         }
         
         // 检查是否以数字开头
         if (fieldName.first().isDigit()) {
-            return ValidationResult(false, "字段名不能以数字开头")
+            return ValidationResult(false, msg("validation.field.name.no.leading.digit"))
         }
         
-        return ValidationResult(true, "字段名格式正确")
+        return ValidationResult(true, msg("validation.field.name.ok"))
     }
     
     /**
@@ -100,7 +104,7 @@ class BatchDeleteService {
      */
     fun validateTimeFormat(timeString: String): ValidationResult {
         if (timeString.isBlank()) {
-            return ValidationResult(false, "时间不能为空")
+            return ValidationResult(false, msg("validation.time.required"))
         }
         
         // 简单的时间格式验证（支持多种格式）
@@ -116,10 +120,10 @@ class BatchDeleteService {
         }
         
         if (!isValidFormat) {
-            return ValidationResult(false, "时间格式不正确，支持的格式：YYYY-MM-DD 或 YYYY-MM-DD HH:MM:SS")
+            return ValidationResult(false, msg("validation.time.format.invalid"))
         }
         
-        return ValidationResult(true, "时间格式正确")
+        return ValidationResult(true, msg("validation.time.format.ok"))
     }
     
     /**
@@ -154,8 +158,16 @@ class BatchDeleteService {
         """.trimIndent()
     }
     
+    /**
+     * 表示 `ValidationResult` 的结果数据。
+     */
     data class ValidationResult(
         val isValid: Boolean,
         val message: String
     )
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }
