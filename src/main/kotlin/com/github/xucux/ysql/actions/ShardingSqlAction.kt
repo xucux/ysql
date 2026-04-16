@@ -6,6 +6,7 @@ import com.github.xucux.ysql.services.SqlShardingService
 import com.github.xucux.ysql.services.TableNameExtractorService
 import com.github.xucux.ysql.ui.ShardingConfigDialog
 import com.github.xucux.ysql.ui.ShardingResultDialog
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -18,8 +19,15 @@ import com.intellij.openapi.util.TextRange
  * 分表SQL解析Action
  * 主入口Action，处理用户的分表SQL生成请求
  */
-class ShardingSqlAction : AnAction("生成分表SQL", "从单个SQL语句生成多个分表SQL语句", null), DumbAware {
+class ShardingSqlAction : AnAction(
+    I18nUtil.getMessage("action.generate.sharding.sql.text"),
+    I18nUtil.getMessage("action.generate.sharding.sql.description"),
+    null
+), DumbAware {
     
+    /**
+     * 执行当前动作。
+     */
     override fun actionPerformed(event: AnActionEvent) {
         val project = event.project ?: return
         val editor = event.getData(CommonDataKeys.EDITOR)
@@ -58,8 +66,8 @@ class ShardingSqlAction : AnAction("生成分表SQL", "从单个SQL语句生成�
                         } else {
                             Messages.showErrorDialog(
                                 project,
-                                "生成分表SQL失败：${result.errorMessage}",
-                                "错误"
+                                I18nUtil.getMessage("message.sharding.generate.failed", result.errorMessage ?: ""),
+                                I18nUtil.getMessage("dialog.title.error")
                             )
                         }
                     }
@@ -67,8 +75,8 @@ class ShardingSqlAction : AnAction("生成分表SQL", "从单个SQL语句生成�
                     ApplicationManager.getApplication().invokeLater {
                         Messages.showErrorDialog(
                             project,
-                            "生成分表SQL时发生异常：${e.message}",
-                            "异常"
+                            I18nUtil.getMessage("message.sharding.generate.exception", e.message ?: ""),
+                            I18nUtil.getMessage("dialog.title.exception")
                         )
                     }
                 }
@@ -76,7 +84,12 @@ class ShardingSqlAction : AnAction("生成分表SQL", "从单个SQL语句生成�
         }
     }
     
+    /**
+     * 更新当前动作的展示状态。
+     */
     override fun update(event: AnActionEvent) {
+        event.presentation.text = I18nUtil.getMessage("action.generate.sharding.sql.text")
+        event.presentation.description = I18nUtil.getMessage("action.generate.sharding.sql.description")
         // 检查是否有编辑器可用
         val editor = event.getData(CommonDataKeys.EDITOR)
         event.presentation.isEnabledAndVisible = editor != null

@@ -17,6 +17,7 @@ import java.awt.BorderLayout
 import java.awt.Dimension
 import javax.swing.*
 import javax.swing.SpinnerNumberModel
+import com.github.xucux.ysql.utils.I18nUtil
 
 /**
  * 批量删除存储过程配置对话框
@@ -38,23 +39,23 @@ class BatchDeleteConfigDialog(
     private val createTimeEndField = JBTextField("2023-01-01 00:00:00")
     
     // 高级配置字段
-    private val addLogTableCheckBox = JBCheckBox("添加日志表", true)
-    private val addTempTableCheckBox = JBCheckBox("添加临时操作表", true)
+    private val addLogTableCheckBox = JBCheckBox(msg("toolwindow.checkbox.add.log.table"), true)
+    private val addTempTableCheckBox = JBCheckBox(msg("toolwindow.checkbox.add.temp.table"), true)
     private val customWhereConditionField = JBTextField()
-    private val procedureCommentField = JBTextField("循环删除历史数据-根据limit查询主键防止临时表，再联表删除")
+    private val procedureCommentField = JBTextField(msg("toolwindow.default.procedure.comment"))
     
     // 模板选择组件
     private val templateComboBox = ComboBox(BatchDeleteTemplate.values())
-    private val applyTemplateButton = JButton("应用模板")
+    private val applyTemplateButton = JButton(msg("dialog.batch.delete.config.button.apply.template"))
     private val templateDescriptionArea = JBTextArea(4, 50)
     
     // 预览相关组件
-    private val previewButton = JButton("预览存储过程")
+    private val previewButton = JButton(msg("dialog.batch.delete.config.button.preview"))
     private val previewTextArea = JBTextArea(15, 60)
-    private val templateButton = JButton("查看模板")
+    private val templateButton = JButton(msg("dialog.batch.delete.config.button.view.template"))
     
     init {
-        title = "批量删除存储过程生成配置"
+        title = msg("dialog.batch.delete.config.title")
         init()
         
         // 设置文本区域属性
@@ -73,6 +74,9 @@ class BatchDeleteConfigDialog(
         setupEventListeners()
     }
     
+    /**
+     * 设置 `upEventListeners`。
+     */
     private fun setupEventListeners() {
         // 模板选择变化事件
         templateComboBox.addActionListener {
@@ -116,11 +120,17 @@ class BatchDeleteConfigDialog(
         updateTemplateDescription()
     }
     
+    /**
+     * 更新 `templateDescription`。
+     */
     private fun updateTemplateDescription() {
         val selectedTemplate = templateComboBox.selectedItem as BatchDeleteTemplate
         templateDescriptionArea.text = selectedTemplate.description
     }
     
+    /**
+     * 处理 `applySelectedTemplate` 逻辑。
+     */
     private fun applySelectedTemplate() {
         val selectedTemplate = templateComboBox.selectedItem as BatchDeleteTemplate
         val templateConfig = selectedTemplate.config
@@ -144,12 +154,15 @@ class BatchDeleteConfigDialog(
         // 显示应用成功消息
         JOptionPane.showMessageDialog(
             this.contentPanel,
-            "模板配置已应用，请根据需要调整参数",
-            "模板应用成功",
+            msg("dialog.batch.delete.config.message.template.applied"),
+            msg("dialog.batch.delete.config.message.template.applied.title"),
             JOptionPane.INFORMATION_MESSAGE
         )
     }
     
+    /**
+     * 处理 `autoGenerateProcedureName` 逻辑。
+     */
     private fun autoGenerateProcedureName() {
         val tableName = mainTableNameField.text.trim()
         if (tableName.isNotBlank() && procedureNameField.text == "DropHistoryDataByLimit") {
@@ -163,6 +176,9 @@ class BatchDeleteConfigDialog(
         }
     }
     
+    /**
+     * 展示 `preview`。
+     */
     private fun showPreview() {
         val config = getConfig()
         try {
@@ -171,13 +187,16 @@ class BatchDeleteConfigDialog(
             if (result.success) {
                 previewTextArea.text = result.generatedProcedure
             } else {
-                previewTextArea.text = "预览生成失败：${result.errorMessage}"
+                previewTextArea.text = msg("message.preview.generate.failed", result.errorMessage ?: "")
             }
         } catch (e: Exception) {
-            previewTextArea.text = "预览生成失败：${e.message}"
+            previewTextArea.text = msg("message.preview.generate.failed", e.message ?: "")
         }
     }
     
+    /**
+     * 展示 `template`。
+     */
     private fun showTemplate() {
         try {
             val selectedTemplate = templateComboBox.selectedItem as BatchDeleteTemplate
@@ -187,26 +206,29 @@ class BatchDeleteConfigDialog(
             val result = batchDeleteService.generateBatchDeleteProcedure(selectedTemplate.config)
             val templateContent = if (result.success) {
                 buildString {
-                    appendLine("=== ${selectedTemplate.displayName} 模板详情 ===")
+                    appendLine(msg("dialog.batch.delete.config.template.detail.header", selectedTemplate.displayName))
                     appendLine()
                     appendLine(selectedTemplate.getDetailedDescription())
                     appendLine()
-                    appendLine("=== 使用建议 ===")
+                    appendLine(msg("dialog.batch.delete.config.template.usage.hint.header"))
                     appendLine(selectedTemplate.getUsageSuggestion())
                     appendLine()
-                    appendLine("=== 生成的存储过程 ===")
+                    appendLine(msg("dialog.batch.delete.config.template.generated.procedure.header"))
                     appendLine(result.generatedProcedure)
                 }
             } else {
-                "模板预览生成失败：${result.errorMessage}"
+                msg("message.template.preview.generate.failed", result.errorMessage ?: "")
             }
             
             val templateDialog = object : DialogWrapper(project) {
                 init {
-                    title = "${selectedTemplate.displayName} 模板详情"
+                    title = msg("dialog.batch.delete.config.template.detail.title", selectedTemplate.displayName)
                     init()
                 }
                 
+                /**
+                 * 创建对话框主体面板。
+                 */
                 override fun createCenterPanel(): JComponent {
                     val textArea = JBTextArea(20, 80)
                     textArea.text = templateContent
@@ -218,8 +240,14 @@ class BatchDeleteConfigDialog(
                     return JBScrollPane(textArea)
                 }
                 
+                /**
+                 * 创建当前对话框的操作列表。
+                 */
                 override fun createActions(): Array<Action> {
-                    val applyTemplateAction = object : AbstractAction("应用此模板") {
+                    val applyTemplateAction = object : AbstractAction(msg("dialog.batch.delete.config.template.action.apply.this.template")) {
+                        /**
+                         * 执行当前动作。
+                         */
                         override fun actionPerformed(e: java.awt.event.ActionEvent?) {
                             applySelectedTemplate()
                             close(0)
@@ -234,60 +262,63 @@ class BatchDeleteConfigDialog(
         } catch (e: Exception) {
             JOptionPane.showMessageDialog(
                     this.contentPanel,
-                "获取模板失败：${e.message}",
-                "错误",
+                msg("message.template.get.failed", e.message ?: ""),
+                msg("dialog.title.error"),
                 JOptionPane.ERROR_MESSAGE
             )
         }
     }
     
+    /**
+     * 创建对话框主体面板。
+     */
     override fun createCenterPanel(): JComponent {
         val mainPanel = JPanel(BorderLayout())
         
         // 创建模板选择面板
         val templatePanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("选择模板:", templateComboBox)
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.select.template"), templateComboBox)
             .addComponent(applyTemplateButton)
-            .addLabeledComponent("模板描述:", JBScrollPane(templateDescriptionArea))
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.template.description"), JBScrollPane(templateDescriptionArea))
             .panel
         
         // 创建基础配置面板
         val basicConfigPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("存储过程名称:", procedureNameField)
-            .addLabeledComponent("主表名:", mainTableNameField)
-            .addLabeledComponent("主键字段名:", primaryKeyField)
-            .addLabeledComponent("时间字段名:", timeField)
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.procedure.name"), procedureNameField)
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.main.table.name"), mainTableNameField)
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.primary.key.field"), primaryKeyField)
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.time.field"), timeField)
             .panel
         
         // 创建参数配置面板
         val paramConfigPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("每次删除行数:", limitSizeSpinner)
-            .addLabeledComponent("起始主键值:", minIdSpinner)
-            .addLabeledComponent("删除截至时间:", createTimeEndField)
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.delete.limit"), limitSizeSpinner)
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.min.id"), minIdSpinner)
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.delete.end.time"), createTimeEndField)
             .panel
         
         // 创建高级配置面板
         val advancedConfigPanel = FormBuilder.createFormBuilder()
             .addComponent(addLogTableCheckBox)
             .addComponent(addTempTableCheckBox)
-            .addLabeledComponent("自定义WHERE条件:", customWhereConditionField)
-            .addLabeledComponent("存储过程注释:", procedureCommentField)
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.custom.where"), customWhereConditionField)
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.procedure.comment"), procedureCommentField)
             .panel
         
         // 创建预览面板
         val previewPanel = FormBuilder.createFormBuilder()
             .addComponent(previewButton)
-            .addLabeledComponent("存储过程预览:", JBScrollPane(previewTextArea))
+            .addLabeledComponent(msg("dialog.batch.delete.config.label.procedure.preview"), JBScrollPane(previewTextArea))
             .addComponent(templateButton)
             .panel
         
         // 创建标签页
         val tabbedPane = JBTabbedPane()
-        tabbedPane.addTab("模板选择", templatePanel)
-        tabbedPane.addTab("基础配置", basicConfigPanel)
-        tabbedPane.addTab("参数配置", paramConfigPanel)
-        tabbedPane.addTab("高级配置", advancedConfigPanel)
-        tabbedPane.addTab("预览", previewPanel)
+        tabbedPane.addTab(msg("dialog.batch.delete.config.tab.select.template"), templatePanel)
+        tabbedPane.addTab(msg("dialog.batch.delete.config.tab.basic.config"), basicConfigPanel)
+        tabbedPane.addTab(msg("dialog.batch.delete.config.tab.param.config"), paramConfigPanel)
+        tabbedPane.addTab(msg("dialog.batch.delete.config.tab.advanced.config"), advancedConfigPanel)
+        tabbedPane.addTab(msg("dialog.batch.delete.config.tab.preview"), previewPanel)
         
         mainPanel.add(tabbedPane, BorderLayout.CENTER)
         
@@ -297,10 +328,16 @@ class BatchDeleteConfigDialog(
         return mainPanel
     }
     
+    /**
+     * 创建当前对话框的操作列表。
+     */
     override fun createActions(): Array<Action> {
         return arrayOf(okAction, cancelAction)
     }
     
+    /**
+     * 处理 `doOKAction` 逻辑。
+     */
     override fun doOKAction() {
         // 验证配置
         val config = getConfig()
@@ -312,7 +349,7 @@ class BatchDeleteConfigDialog(
             JOptionPane.showMessageDialog(
                     this.contentPanel,
                 procedureNameValidation.message,
-                "配置错误",
+                msg("dialog.title.config.error"),
                 JOptionPane.ERROR_MESSAGE
             )
             return
@@ -324,7 +361,7 @@ class BatchDeleteConfigDialog(
             JOptionPane.showMessageDialog(
                     this.contentPanel,
                 tableNameValidation.message,
-                "配置错误",
+                msg("dialog.title.config.error"),
                 JOptionPane.ERROR_MESSAGE
             )
             return
@@ -336,7 +373,7 @@ class BatchDeleteConfigDialog(
             JOptionPane.showMessageDialog(
                     this.contentPanel,
                 primaryKeyValidation.message,
-                "配置错误",
+                msg("dialog.title.config.error"),
                 JOptionPane.ERROR_MESSAGE
             )
             return
@@ -347,7 +384,7 @@ class BatchDeleteConfigDialog(
             JOptionPane.showMessageDialog(
                     this.contentPanel,
                 timeFieldValidation.message,
-                "配置错误",
+                msg("dialog.title.config.error"),
                 JOptionPane.ERROR_MESSAGE
             )
             return
@@ -359,7 +396,7 @@ class BatchDeleteConfigDialog(
             JOptionPane.showMessageDialog(
                     this.contentPanel,
                 timeValidation.message,
-                "配置错误",
+                msg("dialog.title.config.error"),
                 JOptionPane.ERROR_MESSAGE
             )
             return
@@ -368,6 +405,9 @@ class BatchDeleteConfigDialog(
         super.doOKAction()
     }
     
+    /**
+     * 获取 `config`。
+     */
     fun getConfig(): BatchDeleteConfig {
         return BatchDeleteConfig(
             procedureName = procedureNameField.text,
@@ -383,4 +423,9 @@ class BatchDeleteConfigDialog(
             procedureComment = procedureCommentField.text
         )
     }
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

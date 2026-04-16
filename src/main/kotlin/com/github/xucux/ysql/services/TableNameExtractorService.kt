@@ -2,6 +2,7 @@ package com.github.xucux.ysql.services
 
 import com.github.xucux.ysql.utils.SqlParser
 import com.github.xucux.ysql.utils.EncodingUtils
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.components.Service
 
 /**
@@ -9,6 +10,9 @@ import com.intellij.openapi.components.Service
  * 提供智能表名识别和提取功能
  */
 @Service
+/**
+ * 提供 `TableNameExtractorService` 相关业务服务。
+ */
 class TableNameExtractorService {
     
     /**
@@ -43,7 +47,7 @@ class TableNameExtractorService {
             TableNameExtractionResult(
                 success = false,
                 tableNames = emptyList(),
-                errorMessage = EncodingUtils.formatChineseText("未找到有效的表名，请检查SQL语句是否正确")
+                errorMessage = EncodingUtils.formatChineseText(msg("table.name.extractor.no.valid.table"))
             )
         } else {
             TableNameExtractionResult(
@@ -64,13 +68,13 @@ class TableNameExtractorService {
         val uniqueTableNames = tableNames.distinct()
         
         return buildString {
-            appendLine(EncodingUtils.formatChineseText("表名提取统计："))
-            appendLine(EncodingUtils.formatChineseText("• 总表名数量：${tableNames.size}"))
-            appendLine(EncodingUtils.formatChineseText("• 唯一表名数量：${uniqueTableNames.size}"))
-            appendLine(EncodingUtils.formatChineseText("• 表名列表：${uniqueTableNames.joinToString(", ")}"))
+            appendLine(EncodingUtils.formatChineseText(msg("table.name.extractor.statistics.header")))
+            appendLine(EncodingUtils.formatChineseText(msg("table.name.extractor.statistics.total.count", tableNames.size)))
+            appendLine(EncodingUtils.formatChineseText(msg("table.name.extractor.statistics.unique.count", uniqueTableNames.size)))
+            appendLine(EncodingUtils.formatChineseText(msg("table.name.extractor.statistics.table.names", uniqueTableNames.joinToString(", "))))
             
             if (tableNames.size != uniqueTableNames.size) {
-                appendLine(EncodingUtils.formatChineseText("• 注意：存在重复表名"))
+                appendLine(EncodingUtils.formatChineseText(msg("table.name.extractor.statistics.duplicate.notice")))
             }
         }
     }
@@ -83,4 +87,9 @@ class TableNameExtractorService {
         val tableNames: List<String>,
         val errorMessage: String?
     )
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

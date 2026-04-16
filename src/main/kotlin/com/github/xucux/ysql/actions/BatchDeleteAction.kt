@@ -4,6 +4,7 @@ import com.github.xucux.ysql.models.BatchDeleteConfig
 import com.github.xucux.ysql.services.BatchDeleteService
 import com.github.xucux.ysql.ui.BatchDeleteConfigDialog
 import com.github.xucux.ysql.ui.BatchDeleteResultDialog
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -16,8 +17,15 @@ import com.intellij.openapi.util.TextRange
  * 批量删除存储过程生成Action
  * 主入口Action，处理用户的批量删除存储过程生成请求
  */
-class BatchDeleteAction : AnAction("生成批量删除存储过程", "根据配置生成批量删除历史数据的存储过程", null), DumbAware {
+class BatchDeleteAction : AnAction(
+    I18nUtil.getMessage("action.batch.delete.procedure.text"),
+    I18nUtil.getMessage("action.batch.delete.procedure.description"),
+    null
+), DumbAware {
     
+    /**
+     * 执行当前动作。
+     */
     override fun actionPerformed(event: AnActionEvent) {
         val project = event.project ?: return
         
@@ -41,8 +49,8 @@ class BatchDeleteAction : AnAction("生成批量删除存储过程", "根据配�
                         } else {
                             Messages.showErrorDialog(
                                 project,
-                                "生成批量删除存储过程失败：${result.errorMessage}",
-                                "错误"
+                                I18nUtil.getMessage("message.batch.delete.generate.failed", result.errorMessage ?: ""),
+                                I18nUtil.getMessage("dialog.title.error")
                             )
                         }
                     }
@@ -50,8 +58,8 @@ class BatchDeleteAction : AnAction("生成批量删除存储过程", "根据配�
                     ApplicationManager.getApplication().invokeLater {
                         Messages.showErrorDialog(
                             project,
-                            "生成批量删除存储过程时发生异常：${e.message}",
-                            "异常"
+                            I18nUtil.getMessage("message.batch.delete.generate.exception", e.message ?: ""),
+                            I18nUtil.getMessage("dialog.title.exception")
                         )
                     }
                 }
@@ -59,7 +67,12 @@ class BatchDeleteAction : AnAction("生成批量删除存储过程", "根据配�
         }
     }
     
+    /**
+     * 更新当前动作的展示状态。
+     */
     override fun update(event: AnActionEvent) {
+        event.presentation.text = I18nUtil.getMessage("action.batch.delete.procedure.text")
+        event.presentation.description = I18nUtil.getMessage("action.batch.delete.procedure.description")
         // 检查是否有项目可用
         val project = event.project
         event.presentation.isEnabledAndVisible = project != null

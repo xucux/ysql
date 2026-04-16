@@ -1,5 +1,7 @@
 package com.github.xucux.ysql.models
 
+import com.github.xucux.ysql.utils.I18nUtil
+
 /**
  * StringBuffer配置模型
  * 用于存储StringBuffer代码生成的相关配置信息
@@ -35,16 +37,24 @@ data class StringBufferConfig(
  * 支持的编程语言枚举
  */
 enum class CodeLanguage(
-    val displayName: String,
+    private val displayNameKey: String,
     val bufferClass: String,
     val toStringMethod: String,
     val fileExtension: String
 ) {
-    JAVA("Java", "StringBuffer", "toString()", "java"),
-    CSHARP("C#", "StringBuilder", "ToString()", "cs"),
-    KOTLIN("Kotlin", "StringBuilder", "toString()", "kt"),
-    SCALA("Scala", "StringBuilder", "toString()", "scala"),
-    GROOVY("Groovy", "StringBuilder", "toString()", "groovy");
+    JAVA("code.language.java", "StringBuffer", "toString()", "java"),
+    CSHARP("code.language.csharp", "StringBuilder", "ToString()", "cs"),
+    KOTLIN("code.language.kotlin", "StringBuilder", "toString()", "kt"),
+    SCALA("code.language.scala", "StringBuilder", "toString()", "scala"),
+    GROOVY("code.language.groovy", "StringBuilder", "toString()", "groovy");
+
+    val displayName: String
+        get() = I18nUtil.getMessage(displayNameKey)
+
+    /**
+     * 返回当前对象的显示文本。
+     */
+    override fun toString(): String = displayName
     
     /**
      * 获取语言特定的注释符号

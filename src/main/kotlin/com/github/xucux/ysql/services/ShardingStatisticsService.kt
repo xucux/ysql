@@ -6,6 +6,7 @@ import com.github.xucux.ysql.ui.ShardingStatisticsConfigDialog
 import com.github.xucux.ysql.utils.SqlParser
 import com.github.xucux.ysql.utils.SuffixGenerator
 import com.github.xucux.ysql.utils.EncodingUtils
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.components.Service
 
 /**
@@ -13,6 +14,9 @@ import com.intellij.openapi.components.Service
  * 负责生成分表统计SQL，将多个分表的数据进行UNION ALL并统计
  */
 @Service
+/**
+ * 提供 `ShardingStatisticsService` 相关业务服务。
+ */
 class ShardingStatisticsService {
     
     /**
@@ -57,7 +61,7 @@ class ShardingStatisticsService {
         } catch (e: Exception) {
             return ShardingStatisticsResult(
                 success = false,
-                errorMessage = EncodingUtils.formatChineseText("生成分表统计SQL时发生错误：${e.message}")
+                errorMessage = EncodingUtils.formatChineseText(msg("message.sharding.statistics.generate.exception", e.message ?: ""))
             )
         }
     }
@@ -84,7 +88,7 @@ class ShardingStatisticsService {
         // 解析原始SQL，提取SELECT字段
         val selectFields = extractSelectFields(config.originalSql)
         if (selectFields.isEmpty()) {
-            throw IllegalArgumentException("无法从SQL中提取SELECT字段")
+            throw IllegalArgumentException(msg("sharding.statistics.select.fields.extract.failed"))
         }
         
         // 生成UNION ALL子查询
@@ -279,7 +283,7 @@ class ShardingStatisticsService {
         val statisticsFields = selectFields.map { selectField ->
             if (selectField.expression == "*") {
                 // 对于SELECT *的情况，需要特殊处理，这里暂时不支持
-                throw IllegalArgumentException("SELECT * 暂不支持，请明确指定字段名")
+                throw IllegalArgumentException(msg("sharding.statistics.select.star.not.supported"))
             } else {
                 // 使用字段表达式作为配置键，如果没有找到配置则使用别名
                 val configKey = selectField.expression
@@ -320,27 +324,35 @@ class ShardingStatisticsService {
      */
     private fun validateConfig(config: ShardingConfig): ValidationResult {
         if (config.tableNames.isEmpty()) {
-            return ValidationResult(false, "表名列表不能为空")
+            return ValidationResult(false, msg("validation.table.names.required"))
         }
         
         if (config.shardCount <= 0) {
-            return ValidationResult(false, "分表数量必须大于0")
+            return ValidationResult(false, msg("validation.shard.count.gt.zero"))
         }
         
         if (config.originalSql.isBlank()) {
-            return ValidationResult(false, "原始SQL语句不能为空")
+            return ValidationResult(false, msg("validation.original.sql.required"))
         }
         
         // 检查SQL是否包含SELECT语句
         if (!config.originalSql.contains("SELECT", ignoreCase = true)) {
-            return ValidationResult(false, "SQL语句必须包含SELECT子句")
+            return ValidationResult(false, msg("validation.sql.must.contain.select"))
         }
         
-        return ValidationResult(true, "配置验证通过")
+        return ValidationResult(true, msg("validation.config.ok"))
     }
     
+    /**
+     * 表示 `ValidationResult` 的结果数据。
+     */
     private data class ValidationResult(
         val isValid: Boolean,
         val message: String
     )
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

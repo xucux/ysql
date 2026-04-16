@@ -1,6 +1,7 @@
 package com.github.xucux.ysql.ui
 
 import com.github.xucux.ysql.models.StringBufferResult
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBScrollPane
@@ -26,7 +27,7 @@ class StringBufferResultDialog(
     private val statisticsTextArea = JBTextArea(8, 80)
     
     init {
-        title = "StringBuffer代码生成结果"
+        title = msg("dialog.string.buffer.result.title")
         init()
         
         // 设置代码文本区域
@@ -44,6 +45,9 @@ class StringBufferResultDialog(
         statisticsTextArea.font = java.awt.Font("Dialog", java.awt.Font.PLAIN, 11)
     }
     
+    /**
+     * 创建对话框主体面板。
+     */
     override fun createCenterPanel(): JComponent {
         val mainPanel = JPanel(BorderLayout())
         
@@ -53,12 +57,12 @@ class StringBufferResultDialog(
         // 代码标签页
         val codePanel = JPanel(BorderLayout())
         codePanel.add(JBScrollPane(codeTextArea), BorderLayout.CENTER)
-        tabbedPane.addTab("生成代码", codePanel)
+        tabbedPane.addTab(msg("dialog.string.buffer.result.tab.code"), codePanel)
         
         // 统计信息标签页
         val statisticsPanel = JPanel(BorderLayout())
         statisticsPanel.add(JBScrollPane(statisticsTextArea), BorderLayout.CENTER)
-        tabbedPane.addTab("统计信息", statisticsPanel)
+        tabbedPane.addTab(msg("dialog.result.tab.statistics"), statisticsPanel)
         
         mainPanel.add(tabbedPane, BorderLayout.CENTER)
         
@@ -68,14 +72,23 @@ class StringBufferResultDialog(
         return mainPanel
     }
     
+    /**
+     * 创建当前对话框的操作列表。
+     */
     override fun createActions(): Array<Action> {
-        val copyAction = object : AbstractAction("复制代码") {
+        val copyAction = object : AbstractAction(msg("dialog.action.copy.code")) {
+            /**
+             * 执行当前动作。
+             */
             override fun actionPerformed(e: java.awt.event.ActionEvent?) {
                 copyToClipboard()
             }
         }
         
-        val exportAction = object : AbstractAction("导出到文件") {
+        val exportAction = object : AbstractAction(msg("dialog.action.export.file")) {
+            /**
+             * 执行当前动作。
+             */
             override fun actionPerformed(e: java.awt.event.ActionEvent?) {
                 exportToFile()
             }
@@ -84,6 +97,9 @@ class StringBufferResultDialog(
         return arrayOf(copyAction, exportAction, cancelAction)
     }
     
+    /**
+     * 复制 `toClipboard`。
+     */
     private fun copyToClipboard() {
         val clipboard = Toolkit.getDefaultToolkit().systemClipboard
         val selection = StringSelection(result.generatedCode)
@@ -91,23 +107,32 @@ class StringBufferResultDialog(
         
         JOptionPane.showMessageDialog(
             this.contentPanel,
-            "StringBuffer代码已复制到剪贴板",
-            "复制成功",
+            msg("message.string.buffer.code.copied"),
+            msg("dialog.title.success"),
             JOptionPane.INFORMATION_MESSAGE
         )
     }
     
+    /**
+     * 导出 `toFile`。
+     */
     private fun exportToFile() {
         val fileChooser = JFileChooser()
         val extension = result.language.fileExtension
         fileChooser.selectedFile = java.io.File("stringbuffer_code_${System.currentTimeMillis()}.$extension")
         fileChooser.fileFilter = object : javax.swing.filechooser.FileFilter() {
+            /**
+             * 处理 `accept` 逻辑。
+             */
             override fun accept(f: java.io.File): Boolean {
                 return f.isDirectory || f.name.lowercase().endsWith(".$extension")
             }
             
+            /**
+             * 获取 `description`。
+             */
             override fun getDescription(): String {
-                return "${result.language.displayName}文件 (*.$extension)"
+                return msg("dialog.file.filter.language", result.language.displayName, extension)
             }
         }
         
@@ -118,18 +143,22 @@ class StringBufferResultDialog(
                 
                 JOptionPane.showMessageDialog(
                     this.contentPanel,
-                    "StringBuffer代码已导出到：${file.absolutePath}",
-                    "导出成功",
+                    msg("message.file.export.success", file.absolutePath),
+                    msg("dialog.title.success"),
                     JOptionPane.INFORMATION_MESSAGE
                 )
             } catch (e: Exception) {
                 JOptionPane.showMessageDialog(
                     this.contentPanel,
-                    "导出失败：${e.message}",
-                    "导出错误",
+                    msg("message.file.export.failed", e.message ?: ""),
+                    msg("dialog.title.error"),
                     JOptionPane.ERROR_MESSAGE
                 )
             }
         }
     }
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

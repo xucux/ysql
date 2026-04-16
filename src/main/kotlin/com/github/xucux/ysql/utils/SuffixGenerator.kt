@@ -115,7 +115,7 @@ object SuffixGenerator {
      */
     fun validateFormat(format: String, suffixType: SuffixType): ValidationResult {
         if (format.isBlank()) {
-            return ValidationResult(false, "格式字符串不能为空")
+            return ValidationResult(false, I18nUtil.getMessage("suffix.format.required"))
         }
         
         when (suffixType) {
@@ -126,7 +126,7 @@ object SuffixGenerator {
                                    format.contains("{i}") || 
                                    format.contains("{I}")
                 if (!hasPlaceholder) {
-                    return ValidationResult(false, "自定义格式必须包含占位符，如 {index} 或 {i}")
+                    return ValidationResult(false, I18nUtil.getMessage("suffix.format.custom.placeholder.required"))
                 }
             }
             else -> {
@@ -134,7 +134,7 @@ object SuffixGenerator {
             }
         }
         
-        return ValidationResult(true, "格式字符串有效")
+        return ValidationResult(true, I18nUtil.getMessage("suffix.format.valid"))
     }
     
     /**
@@ -144,10 +144,10 @@ object SuffixGenerator {
      */
     fun getSuffixExample(suffixType: SuffixType): String {
         return when (suffixType) {
-            SuffixType.SEQUENCE -> "示例：_0, _1, _2, _3..."
-            SuffixType.YEAR -> "示例：_2020, _2021, _2022, _2023..."
-            SuffixType.YEAR_MONTH -> "示例：_202001, _202002, _202003, _202004..."
-            SuffixType.CUSTOM -> "示例：使用 {index} 占位符，如 table_{index} 生成 table_0, table_1..."
+            SuffixType.SEQUENCE -> I18nUtil.getMessage("suffix.example.sequence")
+            SuffixType.YEAR -> I18nUtil.getMessage("suffix.example.year")
+            SuffixType.YEAR_MONTH -> I18nUtil.getMessage("suffix.example.year_month")
+            SuffixType.CUSTOM -> I18nUtil.getMessage("suffix.example.custom")
         }
     }
     

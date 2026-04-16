@@ -3,6 +3,7 @@ package com.github.xucux.ysql.config
 import com.github.xucux.ysql.utils.EncodingUtils
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.diagnostic.Logger
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -12,7 +13,11 @@ import java.util.*
  * 确保插件在启动时正确配置UTF-8编码
  */
 @Service
+/**
+ * 表示 `EncodingConfig` 的配置数据。
+ */
 class EncodingConfig {
+    private val logger = Logger.getInstance(EncodingConfig::class.java)
     
     init {
         // 设置系统默认编码为UTF-8
@@ -27,9 +32,6 @@ class EncodingConfig {
             // 设置系统属性
             System.setProperty("file.encoding", "UTF-8")
             System.setProperty("sun.jnu.encoding", "UTF-8")
-            System.setProperty("user.language", "zh")
-            System.setProperty("user.country", "CN")
-            System.setProperty("user.variant", "")
             
             // 设置默认字符集
             System.setProperty("java.util.prefs.PreferencesFactory", "java.util.prefs.FileSystemPreferencesFactory")
@@ -40,7 +42,7 @@ class EncodingConfig {
             
         } catch (e: Exception) {
             // 如果设置失败，记录错误但不影响插件运行
-            println("设置系统编码时发生错误：${e.message}")
+            logger.warn("Failed to setup system encoding", e)
         }
     }
     

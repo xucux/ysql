@@ -1,6 +1,7 @@
 package com.github.xucux.ysql.ui
 
 import com.github.xucux.ysql.models.SqlReverseResult
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBScrollPane
@@ -25,10 +26,13 @@ class SqlReverseResultDialog(
     private lateinit var tabbedPane: JBTabbedPane
     
     init {
-        title = "SQL反向解析结果"
+        title = msg("dialog.sql.reverse.result.title")
         init()
     }
     
+    /**
+     * 创建对话框主体面板。
+     */
     override fun createCenterPanel(): JComponent {
         val panel = JPanel(BorderLayout())
         
@@ -76,7 +80,7 @@ class SqlReverseResultDialog(
         sqlPanel.add(sqlScrollPane, BorderLayout.CENTER)
         sqlPanel.add(buttonPanel, BorderLayout.SOUTH)
         
-        tabbedPane.addTab("提取的SQL语句", sqlPanel)
+        tabbedPane.addTab(msg("dialog.sql.reverse.result.tab.extracted.sql"), sqlPanel)
     }
     
     /**
@@ -99,7 +103,7 @@ class SqlReverseResultDialog(
         
         fragmentsPanel.add(fragmentsScrollPane, BorderLayout.CENTER)
         
-        tabbedPane.addTab("SQL片段详情", fragmentsPanel)
+        tabbedPane.addTab(msg("dialog.sql.reverse.result.tab.fragments"), fragmentsPanel)
     }
     
     /**
@@ -122,7 +126,7 @@ class SqlReverseResultDialog(
         
         statisticsPanel.add(statisticsScrollPane, BorderLayout.CENTER)
         
-        tabbedPane.addTab("解析统计", statisticsPanel)
+        tabbedPane.addTab(msg("dialog.sql.reverse.result.tab.statistics"), statisticsPanel)
     }
     
     /**
@@ -133,19 +137,19 @@ class SqlReverseResultDialog(
         buttonPanel.layout = BoxLayout(buttonPanel, BoxLayout.X_AXIS)
         
         // 复制SQL按钮
-        val copySqlButton = JButton("复制SQL语句")
+        val copySqlButton = JButton(msg("dialog.sql.reverse.result.button.copy.sql"))
         copySqlButton.addActionListener {
             copyToClipboard(result.extractedSql)
         }
         
         // 复制所有内容按钮
-        val copyAllButton = JButton("复制所有内容")
+        val copyAllButton = JButton(msg("dialog.sql.reverse.result.button.copy.all"))
         copyAllButton.addActionListener {
             copyToClipboard(result.getFormattedResult())
         }
         
         // 格式化SQL按钮
-        val formatSqlButton = JButton("格式化SQL")
+        val formatSqlButton = JButton(msg("dialog.sql.reverse.result.button.format.sql"))
         formatSqlButton.addActionListener {
             formatSql()
         }
@@ -171,8 +175,8 @@ class SqlReverseResultDialog(
         
         JOptionPane.showMessageDialog(
             this.contentPanel,
-            "内容已复制到剪贴板",
-            "提示",
+            msg("message.content.copied"),
+            msg("dialog.title.info"),
             JOptionPane.INFORMATION_MESSAGE
         )
     }
@@ -192,13 +196,20 @@ class SqlReverseResultDialog(
         
         JOptionPane.showMessageDialog(
             this.contentPanel,
-            "SQL语句已格式化",
-            "提示",
+            msg("message.sql.formatted"),
+            msg("dialog.title.info"),
             JOptionPane.INFORMATION_MESSAGE
         )
     }
     
+    /**
+     * 创建当前对话框的操作列表。
+     */
     override fun createActions(): Array<Action> {
         return arrayOf(okAction)
     }
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

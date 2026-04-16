@@ -21,7 +21,7 @@ object SqlReverseParser {
             if (code.isBlank()) {
                 return SqlReverseResult(
                     success = false,
-                    errorMessage = "代码不能为空"
+                    errorMessage = I18nUtil.getMessage("validation.code.required")
                 )
             }
             
@@ -31,7 +31,7 @@ object SqlReverseParser {
             if (sqlStatements.isEmpty()) {
                 return SqlReverseResult(
                     success = false,
-                    errorMessage = "未找到有效的SQL语句"
+                    errorMessage = I18nUtil.getMessage("sql.reverse.parser.no.valid.sql")
                 )
             }
             
@@ -48,7 +48,7 @@ object SqlReverseParser {
         } catch (e: Exception) {
             return SqlReverseResult(
                 success = false,
-                errorMessage = "解析SQL时发生错误：${e.message}"
+                errorMessage = I18nUtil.getMessage("sql.reverse.parser.exception", e.message ?: "")
             )
         }
     }
@@ -170,13 +170,13 @@ object SqlReverseParser {
      */
     fun getParseStatistics(result: SqlReverseResult): String {
         return buildString {
-            appendLine("// SQL反向解析统计：")
-            appendLine("// 编程语言：${result.language.displayName}")
-            appendLine("// SQL片段数量：${result.sqlStatements.size}")
-            appendLine("// 总字符数：${result.extractedSql.length}")
-            appendLine("// 解析状态：${if (result.success) "成功" else "失败"}")
+            appendLine(I18nUtil.getMessage("sql.reverse.parser.statistics.header"))
+            appendLine(I18nUtil.getMessage("sql.reverse.parser.statistics.language", result.language.displayName))
+            appendLine(I18nUtil.getMessage("sql.reverse.parser.statistics.fragment.count", result.sqlStatements.size))
+            appendLine(I18nUtil.getMessage("sql.reverse.parser.statistics.char.count", result.extractedSql.length))
+            appendLine(I18nUtil.getMessage("sql.reverse.parser.statistics.status", I18nUtil.getMessage(if (result.success) "common.status.success" else "common.status.failed")))
             if (!result.success && result.errorMessage != null) {
-                appendLine("// 错误信息：${result.errorMessage}")
+                appendLine(I18nUtil.getMessage("sql.reverse.parser.statistics.error.message", result.errorMessage))
             }
         }
     }

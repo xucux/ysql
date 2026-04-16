@@ -1,6 +1,9 @@
 package com.github.xucux.ysql.ui
 
+import com.github.xucux.ysql.actions.OpenYsqlSettingsAction
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -11,13 +14,28 @@ import com.intellij.ui.content.ContentFactory
  * 负责创建和管理Ysql插件的工具窗口
  */
 class YsqlToolWindowFactory : ToolWindowFactory {
+    companion object {
+        const val TOOL_WINDOW_ID = "YSql"
 
+        fun getToolWindowTitle(): String = I18nUtil.getMessage("toolwindow.title")
+    }
+
+    /**
+     * 处理 `init` 逻辑。
+     */
     override fun init(toolWindow: ToolWindow) {
         // 使用系统图标，自动适配主题
         toolWindow.setIcon(AllIcons.Toolwindows.ToolWindowRun)
+        toolWindow.setStripeTitle(getToolWindowTitle())
+
+        // 在工具窗口的齿轮菜单中增加“YSql 设置”入口
+        toolWindow.setAdditionalGearActions(DefaultActionGroup(OpenYsqlSettingsAction()))
         super.init(toolWindow)
     }
 
+    /**
+     * 创建工具窗口内容。
+     */
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
 
 //        // 检测当前主题
@@ -43,10 +61,26 @@ class YsqlToolWindowFactory : ToolWindowFactory {
         // val content = contentFactory.createContent(toolWindowContent.getContentPanel(), "all", false)
         // toolWindow.contentManager.addContent(content)
         // 创建分表解析工具窗口内容
-        val shardingPanel = contentFactory.createContent(toolWindowContent.getShardingPanel(), "分表解析", false)
-        val stringBufferPanel = contentFactory.createContent(toolWindowContent.getStringBufferPanel(), "StringBuffer", false)
-        val dynamicSqlPanel = contentFactory.createContent(toolWindowContent.getDynamicSqlPanel(), "动态语句", false)
-        val batchDeletePanel = contentFactory.createContent(toolWindowContent.getBatchDeletePanel(), "批量删除", false)
+        val shardingPanel = contentFactory.createContent(
+            toolWindowContent.getShardingPanel(),
+            I18nUtil.getMessage("toolwindow.tab.sharding"),
+            false
+        )
+        val stringBufferPanel = contentFactory.createContent(
+            toolWindowContent.getStringBufferPanel(),
+            I18nUtil.getMessage("toolwindow.tab.string.buffer"),
+            false
+        )
+        val dynamicSqlPanel = contentFactory.createContent(
+            toolWindowContent.getDynamicSqlPanel(),
+            I18nUtil.getMessage("toolwindow.tab.dynamic.sql"),
+            false
+        )
+        val batchDeletePanel = contentFactory.createContent(
+            toolWindowContent.getBatchDeletePanel(),
+            I18nUtil.getMessage("toolwindow.tab.batch.delete"),
+            false
+        )
         
 
         toolWindow.contentManager.addContent(shardingPanel)
@@ -56,6 +90,9 @@ class YsqlToolWindowFactory : ToolWindowFactory {
 
     }
     
+    /**
+     * 判断工具窗口是否可用。
+     */
     override fun shouldBeAvailable(project: Project): Boolean {
         // 工具窗口对所有项目都可用
         return true

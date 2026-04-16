@@ -80,7 +80,7 @@ object SqlParser {
      */
     fun validateSql(sql: String): ValidationResult {
         if (sql.isBlank()) {
-            return ValidationResult(false, "SQL语句不能为空")
+            return ValidationResult(false, I18nUtil.getMessage("validation.sql.required"))
         }
         
         val trimmedSql = sql.trim()
@@ -90,7 +90,7 @@ object SqlParser {
             .any { trimmedSql.uppercase().contains(it) }
         
         if (!hasValidKeyword) {
-            return ValidationResult(false, "SQL语句格式不正确，请检查是否包含有效的SQL关键字")
+            return ValidationResult(false, I18nUtil.getMessage("validation.sql.invalid.keyword"))
         }
         
         // 检查括号匹配
@@ -98,10 +98,10 @@ object SqlParser {
         val closeParens = trimmedSql.count { it == ')' }
         
         if (openParens != closeParens) {
-            return ValidationResult(false, "SQL语句中括号不匹配")
+            return ValidationResult(false, I18nUtil.getMessage("validation.sql.parentheses.mismatch"))
         }
         
-        return ValidationResult(true, "SQL语句格式正确")
+        return ValidationResult(true, I18nUtil.getMessage("validation.sql.ok"))
     }
     
     /**

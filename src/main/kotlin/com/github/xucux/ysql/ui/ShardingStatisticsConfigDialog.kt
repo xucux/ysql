@@ -1,6 +1,7 @@
 package com.github.xucux.ysql.ui
 
 import com.github.xucux.ysql.models.ShardingConfig
+import com.github.xucux.ysql.utils.I18nUtil
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBTextField
 import com.intellij.openapi.ui.ComboBox
@@ -29,16 +30,19 @@ class ShardingStatisticsConfigDialog(
     
     // 一键设置组件
     private val globalStatisticsTypeComboBox = ComboBox(StatisticsType.values())
-    private val applyToAllButton = JButton("应用到所有字段")
+    private val applyToAllButton = JButton(msg("dialog.sharding.statistics.apply.all"))
     
     // 解析出的字段列表
     private val extractedFields = mutableListOf<String>()
     
     init {
-        title = "分表统计配置"
+        title = msg("dialog.sharding.statistics.title")
         
         // 初始化表格模型
-        tableModel = object : DefaultTableModel(arrayOf("字段名", "统计类型"), 0) {
+        tableModel = object : DefaultTableModel(arrayOf(msg("dialog.sharding.statistics.column.field"), msg("dialog.sharding.statistics.column.type")), 0) {
+            /**
+             * 判断是否为 `cellEditable`。
+             */
             override fun isCellEditable(row: Int, column: Int): Boolean {
                 return column == 1 // 只有统计类型列可编辑
             }
@@ -62,18 +66,21 @@ class ShardingStatisticsConfigDialog(
         init()
     }
     
+    /**
+     * 创建对话框主体面板。
+     */
     override fun createCenterPanel(): JComponent {
         val panel = JPanel(BorderLayout())
         
         // 创建一键设置面板
         val globalConfigPanel = JPanel(FlowLayout(FlowLayout.LEFT))
-        globalConfigPanel.add(com.intellij.ui.components.JBLabel("一键设置统计类型:"))
+        globalConfigPanel.add(com.intellij.ui.components.JBLabel(msg("dialog.sharding.statistics.global.type")))
         globalConfigPanel.add(globalStatisticsTypeComboBox)
         globalConfigPanel.add(applyToAllButton)
         
         // 创建字段统计配置面板
         val fieldConfigPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent("字段统计配置:", fieldStatisticsTable)
+            .addLabeledComponent(msg("dialog.sharding.statistics.field.config"), fieldStatisticsTable)
             .panel
         
         // 组合面板
@@ -113,7 +120,7 @@ class ShardingStatisticsConfigDialog(
         val selectClause = trimmedSql.substring(selectIndex + 6, fromIndex).trim()
         if (selectClause == "*") {
             // 如果是SELECT *，提示用户
-            tableModel.addRow(arrayOf("* (请明确指定字段名)", StatisticsType.SUM))
+            tableModel.addRow(arrayOf(msg("dialog.sharding.statistics.wildcard.hint"), StatisticsType.SUM))
             return
         }
         
@@ -151,11 +158,17 @@ class ShardingStatisticsConfigDialog(
     /**
      * 统计类型枚举
      */
-    enum class StatisticsType(val displayName: String, val description: String) {
-        SUM("求和统计", "对所有数值字段进行SUM统计"),
-        COUNT("计数统计", "对所有字段进行COUNT统计"),
-        AVG("平均值统计", "对所有数值字段进行AVG统计"),
-        MAX("最大值统计", "对所有字段进行MAX统计"),
-        MIN("最小值统计", "对所有字段进行MIN统计")
+    enum class StatisticsType(private val displayNameKey: String, val descriptionKey: String) {
+        SUM("dialog.sharding.statistics.type.sum", "dialog.sharding.statistics.type.sum.description"),
+        COUNT("dialog.sharding.statistics.type.count", "dialog.sharding.statistics.type.count.description"),
+        AVG("dialog.sharding.statistics.type.avg", "dialog.sharding.statistics.type.avg.description"),
+        MAX("dialog.sharding.statistics.type.max", "dialog.sharding.statistics.type.max.description"),
+        MIN("dialog.sharding.statistics.type.min", "dialog.sharding.statistics.type.min.description");
+
+        override fun toString(): String = I18nUtil.getMessage(displayNameKey)
     }
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }

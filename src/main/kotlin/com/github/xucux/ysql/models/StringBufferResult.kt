@@ -1,5 +1,7 @@
 package com.github.xucux.ysql.models
 
+import com.github.xucux.ysql.utils.I18nUtil
+
 /**
  * StringBuffer结果模型
  * 用于存储StringBuffer代码生成的结果信息
@@ -50,15 +52,15 @@ data class StringBufferResult(
      */
     fun getStatistics(): String {
         return buildString {
-            appendLine("// 代码生成统计：")
-            appendLine("// 编程语言：${language.displayName}")
-            appendLine("// 变量名称：$variableName")
-            appendLine("// 代码行数：$lineCount")
-            appendLine("// 字符数量：$charCount")
-            appendLine("// 生成时间：${java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(generateTime), java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}")
-            appendLine("// 状态：${if (success) "成功" else "失败"}")
+            appendLine(msg("string.buffer.result.statistics.header"))
+            appendLine(msg("string.buffer.result.statistics.language", language.displayName))
+            appendLine(msg("string.buffer.result.statistics.variable.name", variableName))
+            appendLine(msg("string.buffer.result.statistics.line.count", lineCount))
+            appendLine(msg("string.buffer.result.statistics.char.count", charCount))
+            appendLine(msg("string.buffer.result.statistics.generate.time", formatTime(generateTime)))
+            appendLine(msg("string.buffer.result.statistics.status", msg(if (success) "common.status.success" else "common.status.failed")))
             if (!success && errorMessage != null) {
-                appendLine("// 错误信息：$errorMessage")
+                appendLine(msg("string.buffer.result.statistics.error.message", errorMessage))
             }
         }
     }
@@ -84,8 +86,8 @@ data class StringBufferResult(
      */
     fun getFormattedResult(): String {
         return buildString {
-            appendLine("// 状态：${if (success) "成功" else "失败"}")
-            appendLine("// 生成的代码：")
+            appendLine(msg("string.buffer.result.formatted.status", msg(if (success) "common.status.success" else "common.status.failed")))
+            appendLine(msg("string.buffer.result.formatted.generated.code"))
             // 为生成的代码添加缩进
             generatedCode.split("\n").forEach { line ->
                 if (line.isNotBlank()) {
@@ -97,4 +99,19 @@ data class StringBufferResult(
             }
         }
     }
+
+    /**
+     * 格式化 `time`。
+     */
+    private fun formatTime(time: Long): String {
+        return java.time.LocalDateTime.ofInstant(
+            java.time.Instant.ofEpochMilli(time),
+            java.time.ZoneId.systemDefault()
+        ).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+    }
+
+    /**
+     * 返回国际化消息文本。
+     */
+    private fun msg(key: String, vararg args: Any): String = I18nUtil.getMessage(key, *args)
 }
